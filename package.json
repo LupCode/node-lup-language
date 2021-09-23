@@ -1,0 +1,25 @@
+{
+  "name": "lup-language",
+  "version": "1.0.0",
+  "description": "Node express middleware for multi-language websites",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LupCode/node-lup-language.git"
+  },
+  "keywords": [
+    "Express",
+    "Middleware",
+    "multi-language",
+    "multi-lingual"
+  ],
+  "author": "LupCode.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LupCode/node-lup-language/issues"
+  },
+  "homepage": "https://github.com/LupCode/node-lup-language#readme"
+}
