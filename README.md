@@ -1,2 +1,2 @@
 # node-lup-language
-NodeJS express middleware for multi-language websites
+Node express middleware for multi-language websites
