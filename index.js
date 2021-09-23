@@ -84,9 +84,9 @@ function LanguageRouter(options={
 
         // Update cookie
         if(cookieName && cookieUpdate){
+            let newCookie = (res.headers ? res.headers['set-cookie'] : "") || "";
 
-            // TODO SET COOKIE
-
+            res.headers['set-cookie'] = newCookie;
         }
 
         req[langAttr] = lang;
