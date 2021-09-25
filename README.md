@@ -1,4 +1,4 @@
-# node-lup-language
+# lup-language
 Node express middleware for detecting requested language based on:
 1. URI prefix e.g. /**en**/home/
 2. Cookie value e.g. lang=en
