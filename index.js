@@ -137,7 +137,7 @@ const getTranslations = async function(lang, defaultLang, translationKeys=[], tr
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
  * @returns {<lang>: "<native name>"}
  */
-const getLanguageNames = async function({translationsDir=DEFAULT_TRANSLATIONS_DIR}){
+const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     if(!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
