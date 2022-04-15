@@ -6,7 +6,7 @@ Node express middleware for detecting requested language based on:
 4. Default language code
 Request will be modified such that URI does not start with language code and new attribute `lang` gets added to the request object.
 
-## Example
+## Express Example
 
 ```javascript
 const express = require('express');
@@ -25,10 +25,47 @@ app.use(LanguageRouter({
 // Create your custom routes and retriev request language code 
 // by reading it from req.lang
 app.get('/', function(req, res){
-    res.send("Your requested language is: "+req.lang.toUpperCase());
+    res.send("Your requested language is: "+req.lang.toUpperCase()+"<br>"+
+             "You can access translations from the translations dir using: "+req.TEXT['TranslationKey']);
 });
 
 app.listen(80, function(){
     console.log("Server running");
 });
+```
+
+
+## Next.js Example
+
+```javascript
+// Next.js page
+export default function Home({LANGUAGE_NAMES, TEXT}){
+
+    let components = [];
+    for(let lang in LANGUAGE_NAMES){
+        let name = LANGUAGE_NAMES[lang];
+        components.push(<a href="/{lang}">{name}</a>);
+    }
+
+    return (
+        <>
+            <h1>{TEXT['TranslationKey']}</h1>
+            <h2>{TEXT['HelloWorld']}</h2>
+            {components}
+        </>
+    );
+}
+
+export async function getStaticProps(context){
+    const TEXT = await getTranslations(context.locale, context.defaultLocale, [
+        'TranslationKey', 'HelloWorld' 
+    ]);
+
+    return {
+        props: {
+            LANGUAGE_NAMES: await getLanguageNames(),
+            TEXT: TEXT
+        }
+    };
+}
 ```
