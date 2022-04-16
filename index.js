@@ -83,7 +83,7 @@ const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_D
                             } else {
                                 langs.add(lang);
                                 if(!dict[lang]) dict[lang] = {};
-                                if(globals) for(let k in json) dict[lang][k] = globals[k];
+                                if(globals) for(let k in globals) dict[lang][k] = globals[k];
                                 for(let k in json) dict[lang][k] = json[k];
                             }
                         } catch (ex){ if(!err) console.error(ex); }
