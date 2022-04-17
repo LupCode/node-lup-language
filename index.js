@@ -50,7 +50,7 @@ let DICTONARY = {}; // { translationsDir: {lang: {key: translation} } }
 /**
  * Reloads translations from files inside given directory
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
- * @returns Promise that resolves with nothing after translations have been reloaded from files
+ * @returns Promise that resolves with a list of language codes that where found after translations have been reloaded from files
  */
 const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
@@ -90,7 +90,7 @@ const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_D
                         if(--remaining == 0){
                             LANGUAGES[translationsDir] = Array.from(langs);
                             DICTONARY[translationsDir] = dict;
-                            resolve();
+                            resolve(LANGUAGES[translationsDir]);
                         }
                     });
                 }
@@ -153,9 +153,9 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
 /**
  * Returns a HTTP request/response middleware for detecting request language and loading translation variables
  * @param {Object} options Object containing options for behavior
- * - languages: []  List of language codes that will be accepted (if not defined 'DEFAULT_LANGUAGES' will be used) <br>
  * - default: "en"  Fallback language code that will be used if no other method can detect the language
  *                  (if not defined 'DEFAULT_LANGUAGE' will be used) <br>
+ * - languages: []  List of language codes that will be accepted (if not defined 'DEFAULT_LANGUAGES' will be used) <br>
  * - useUri: true  Boolean if URI should be used for language detection (if not defined 'DEFAULT_USE_URI' will be used) <br>
  * - useHttp: true  Boolean if HTTP header should be used for language detection (if not defined 'DEFAULT_USE_HTTP' will be used) <br>
  * - cookieName: "L"  Name of cookie to read/store user's language or null to disable cookie reading/storing 
@@ -169,6 +169,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
  * - translationsDir: "./translations/"  Relative path from project root or absolute path to a directory containing translation files. Translation files 
  *                                       are json files with the name of a language code e.g. 'en.json'
  *                                       (if not defined 'DEFAULT_TRANSLATIONS_DIR' will be used, if null option is disabled) <br>
+ * - languagesFromTranslations: true    Supported languages get extended by the found language codes in the translations directory (loadTranslations must be true) <br>
  * - useNextConfigLanguages: false  Path to next.config.js file from which languages will be loaded from path i18n.locales
  * - langAttr: "lang"  Name of the attribute added to the request object that tells which language is requested 
  *                     (if not defined 'DEFAULT_REQUEST_LANGUAGE_ATTR' will be used) <br>
@@ -194,7 +195,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
 }){
     const defaultLang = options.default || DEFAULT_LANGUAGE;
 
-    let languages = [];
+    let languages = []; // later converted to Set
     if(options.useNextConfigLanguages) 
         languages = languages.concat(require(options.useNextConfigLanguages != true ? options.useNextConfigLanguages : ROOT+"/next.config.js").i18n.locales);
     if(options.languages) languages = languages.concat(options.languages);
@@ -211,8 +212,16 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
     const translationsDir = (options.translationsDir != undefined ? options.translationsDir : DEFAULT_TRANSLATIONS_DIR);
     const translationsAttr = (options.translationsAttr != undefined ? options.translationsAttr : DEFAULT_REQUEST_TRANSLATIONS_ATTR);
     const loadTranslations = (options.loadTranslations != undefined ? options.loadTranslations : true);
+    const languagesFromTranslations = (options.languagesFromTranslations != undefined ? options.languagesFromTranslations : true);
 
-   if(loadTranslations) reloadTranslations(translationsDir);
+    languages = new Set(languages);
+
+   if(loadTranslations){
+        reloadTranslations(translationsDir).then(function(langs){
+            if(!languagesFromTranslations) return;
+            for(let l of langs) languages.add(l);
+       });
+   }
 
     return function(req, res, next){
 
@@ -223,7 +232,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
             lang = hasSlash ? lang.substring(1) : lang;
             let idx = lang.indexOf("/");
             lang = idx >= 0 ? lang.substring(0, idx) : lang;
-            if(languages.includes(lang)){
+            if(languages.has(lang)){
 
                 // updating request's url and path
                 req.url = ((hasSlash && idx < 0) ? "/" : "") + req.url.substring((hasSlash ? 1 : 0) + lang.length);
@@ -244,7 +253,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
                 if(idx <= 0) continue;
                 if((idx > 0 ? entry.substring(0, idx) : entry).trim() == cookieName){
                     lang = (idx > 0 ? entry.substring(idx+1).trim() : "");
-                    if(languages.includes(lang)) break; else lang = false;
+                    if(languages.has(lang)) break; else lang = false;
                 }
             }
         }
@@ -255,7 +264,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
             if(langs){
                 langs = langs.split(/,|;/g).map(function(v){ return v.trim(); }).filter(function(v){ return v.length > 0 && !v.startsWith("q="); });
                 for(let i=0; i < langs.length; i++)
-                    if(languages.includes(langs[i])){
+                    if(languages.has(langs[i])){
                         lang = langs[i];
                         break;
                     }
