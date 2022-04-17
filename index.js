@@ -8,10 +8,16 @@ let DEFAULT_LANGUAGE = "en";
 /** Default list of language codes that will be accepted */
 let DEFAULT_LANGUAGES = ["en"];
 
+/** Default if translations from directory should be loaded */
+let DEFAULT_LOAD_TRANSLATIONS = true;
+
 /** Default relative path from project root to a directory containing translation files. 
  * Translation files are json files with the name of a language code e.g. 'en.json'. 
  * Can also be an absolute path */
 let DEFAULT_TRANSLATIONS_DIR = "./translations/";
+
+/** Default if language codes should be loaded from files in translations directory */
+let DEFAULT_LANGUAGES_FROM_DIR = true;
 
 /** Default setting if URI should be used for language detection */
 let DEFAULT_USE_URI = true;
@@ -68,7 +74,14 @@ const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_D
                 let remaining = files.length;
                 for(let i=0; i < files.length; i++){
                     let file = files[i];
-                    if(!file.endsWith(".json")) continue;
+                    if(!file.endsWith(".json")){
+                        if(--remaining == 0){
+                            LANGUAGES[translationsDir] = Array.from(langs);
+                            DICTONARY[translationsDir] = dict;
+                            resolve(LANGUAGES[translationsDir]);
+                        }
+                        continue;
+                    }
                     let filePath = path.resolve(TRANSLATIONS_DIR, file).toString();
                     fs.readFile(filePath, {}, function(err, data){
                         if(err) console.error(err);
@@ -165,11 +178,12 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
  * - cookieDomain: null  Domain the cookie will be set for (can be null to not set property, if not defined 'DEFAULT_COOKIE_DOMAIN' will be used) <br>
  * - cookieUpdate: true  Cookie setting if cookie should be set containing detected language 
  *                       (otherwise cookie just get read if 'DEFAULT_COOKIE_NAME' is valid, if not defined 'DEFAULT_COOKIE_UPDATE' will be used) <br>
- * - loadTranslations: true Allows to disable translations loading
+ * - loadTranslations: true Allows to disable translations loading (if not defined 'DEFAULT_LOAD_TRANSLATIONS' will be used)
  * - translationsDir: "./translations/"  Relative path from project root or absolute path to a directory containing translation files. Translation files 
  *                                       are json files with the name of a language code e.g. 'en.json'
  *                                       (if not defined 'DEFAULT_TRANSLATIONS_DIR' will be used, if null option is disabled) <br>
- * - languagesFromTranslations: true    Supported languages get extended by the found language codes in the translations directory (loadTranslations must be true) <br>
+ * - languagesFromTranslations: true    Supported languages get extended by the found language codes in the translations directory 
+ *                                      (loadTranslations must be true, if not defined 'DEFAULT_LANGUAGES_FROM_DIR' will be used) <br>
  * - useNextConfigLanguages: false  Path to next.config.js file from which languages will be loaded from path i18n.locales
  * - langAttr: "lang"  Name of the attribute added to the request object that tells which language is requested 
  *                     (if not defined 'DEFAULT_REQUEST_LANGUAGE_ATTR' will be used) <br>
@@ -178,9 +192,10 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
  function LanguageRouter(options={
-    languages: DEFAULT_LANGUAGES,
     default: DEFAULT_LANGUAGE,
-    loadTranslations: true,
+    languages: DEFAULT_LANGUAGES,
+    loadTranslations: DEFAULT_LOAD_TRANSLATIONS,
+    languagesFromTranslations: DEFAULT_LANGUAGES_FROM_DIR,
     useNextConfigLanguages: false,
     translationsDir: DEFAULT_TRANSLATIONS_DIR,
     useUri: DEFAULT_USE_URI,
@@ -195,11 +210,11 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
 }){
     const defaultLang = options.default || DEFAULT_LANGUAGE;
 
-    let languages = []; // later converted to Set
+    let langs = []; // later converted to Set 'languages'
     if(options.useNextConfigLanguages) 
-        languages = languages.concat(require(options.useNextConfigLanguages != true ? options.useNextConfigLanguages : ROOT+"/next.config.js").i18n.locales);
-    if(options.languages) languages = languages.concat(options.languages);
-    else if(!options.useNextConfigLanguages) languages = languages.concat(DEFAULT_LANGUAGES);
+        langs = langs.concat(require(options.useNextConfigLanguages != true ? options.useNextConfigLanguages : ROOT+"/next.config.js").i18n.locales);
+    if(options.languages) langs = langs.concat(options.languages);
+    else if(!options.useNextConfigLanguages) langs = langs.concat(DEFAULT_LANGUAGES);
 
     const useUri = (options.useUri != undefined ? options.useUri : DEFAULT_USE_URI);
     const useHttp = (options.useHttp != undefined ? options.useHttp : DEFAULT_USE_HTTP);
@@ -211,17 +226,17 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
     const langAttr = options.langAttr || DEFAULT_REQUEST_LANGUAGE_ATTR;
     const translationsDir = (options.translationsDir != undefined ? options.translationsDir : DEFAULT_TRANSLATIONS_DIR);
     const translationsAttr = (options.translationsAttr != undefined ? options.translationsAttr : DEFAULT_REQUEST_TRANSLATIONS_ATTR);
-    const loadTranslations = (options.loadTranslations != undefined ? options.loadTranslations : true);
-    const languagesFromTranslations = (options.languagesFromTranslations != undefined ? options.languagesFromTranslations : true);
+    const loadTranslations = (options.loadTranslations != undefined ? options.loadTranslations : DEFAULT_LOAD_TRANSLATIONS);
+    const languagesFromTranslations = (options.languagesFromTranslations != undefined ? options.languagesFromTranslations : DEFAULT_LANGUAGES_FROM_DIR);
 
-    languages = new Set(languages);
+    const languages = new Set(langs);
 
-   if(loadTranslations){
+    if(loadTranslations){
         reloadTranslations(translationsDir).then(function(langs){
             if(!languagesFromTranslations) return;
             for(let l of langs) languages.add(l);
-       });
-   }
+        });
+    }
 
     return function(req, res, next){
 
@@ -304,6 +319,8 @@ module.exports = {
     DEFAULT_LANGUAGES,
     DEFAULT_REQUEST_LANGUAGE_ATTR,
     DEFAULT_TRANSLATIONS_DIR,
+    DEFAULT_LOAD_TRANSLATIONS,
+    DEFAULT_LANGUAGES_FROM_DIR,
     reloadTranslations,
     getTranslations,
     getLanguageNames,
