@@ -62,12 +62,15 @@ const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_D
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     LANGUAGES[translationsDir] = [];
     DICTONARY[translationsDir] = [];
-    return new Promise(function(resolve){
+    return new Promise(function(resolve, reject){
         const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
 
         function scanFiles(){
             fs.readdir(TRANSLATIONS_DIR, {}, function(err, files){
                 if(err) console.error(err);
+                if(files.length == 0){
+                    reject("No files found in '"+translationsDir+"' ("+TRANSLATIONS_DIR+")");
+                }
                 let dict = {};
                 let langs = new Set();
                 let globals = null;
