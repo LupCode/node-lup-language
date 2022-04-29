@@ -167,6 +167,36 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
 
 
 /**
+ * Loads the contents of a file loaded inside the translations directory
+ * @param {String} fileName Name of the file the contents should be loaded (relative path inside the translations directory)
+ * @param {String} translationsDir Relative path to directory containing JSON files with translations
+ * @returns {String} Contents of the file
+ */
+const getTranslationFileContent = async function(fileName, translationsDir=DEFAULT_TRANSLATIONS_DIR){
+    if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
+    return new Promise(function(resolve, reject){
+        const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
+        fs.readFile(filePath, {}, function(err, data){
+            if(data) resolve(data); else reject(err);
+        });
+    });
+}
+
+
+/**
+ * Loads the contents of a file loaded inside the translations directory
+ * @param {String} fileName Name of the file the contents should be loaded (relative path inside the translations directory)
+ * @param {String} translationsDir Relative path to directory containing JSON files with translations
+ * @returns {String} Contents of the file
+ */
+const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT_TRANSLATIONS_DIR){
+    if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
+    const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
+    return fs.readFileSync(filePath);
+}
+
+
+/**
  * Returns a HTTP request/response middleware for detecting request language and loading translation variables
  * @param {Object} options Object containing options for behavior
  * - default: "en"  Fallback language code that will be used if no other method can detect the language
@@ -192,6 +222,8 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
  *                     (if not defined 'DEFAULT_REQUEST_LANGUAGE_ATTR' will be used) <br>
  * - translationsAttr: "TEXT"  Name of the attribute added to the request object that points to a key/value array containing the translations in the requested language
  *                     (if not defined 'DEFAULT_REQUEST_TRANSLATIONS_ATTR' will be used) <br>
+ * - updateUrlParam: true   If the req.url parameter should be updated (language prefix will be removed if present)
+ * - updatePathParam: true  If the req.path parameter should be updated (language prefix will be removed if present)
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
  function LanguageRouter(options={
@@ -210,6 +242,8 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
     cookieUpdate: DEFAULT_COOKIE_UPDATE, 
     langAttr: DEFAULT_REQUEST_LANGUAGE_ATTR,
     translationsAttr: DEFAULT_REQUEST_TRANSLATIONS_ATTR,
+    updateUrlParam: true,
+    updatePathParam: true,
 }){
     const defaultLang = options.default || DEFAULT_LANGUAGE;
 
@@ -253,11 +287,19 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
             if(languages.has(lang)){
 
                 // updating request's url and path
-                req.url = ((hasSlash && idx < 0) ? "/" : "") + req.url.substring((hasSlash ? 1 : 0) + lang.length);
-                if(req.path){
-                    hasSlash = req.path.startsWith("/");
-                    req.path = ((hasSlash && idx < 0) ? "/" : "") + req.path.substring((hasSlash ? 1 : 0) + lang.length);
-                }
+                let urlPath = ((hasSlash && idx < 0) ? "/" : "") + req.url.substring((hasSlash ? 1 : 0) + lang.length);
+                if(updateUrlParam)
+                    req.url = urlPath;
+                if(updatePathParam)
+                    if(req.path){
+                        hasSlash = req.path.startsWith("/");
+                        idx = req.path.indexOf("/", hasSlash ? 1 : 0);
+                        req.path = req.path.substring(hasSlash?1:0, idx<0?req.path.length:idx) != lang ? req.path :
+                            ((hasSlash && idx < 0) ? "/" : "") + req.path.substring((hasSlash ? 1 : 0) + lang.length);
+                    } else {
+                        idx = urlPath.indexOf("?");
+                        req.path = urlPath.substring(0, idx<0 ? urlPath.length : idx);
+                    }
 
             } else lang = false;
         }
@@ -327,5 +369,7 @@ module.exports = {
     reloadTranslations,
     getTranslations,
     getLanguageNames,
+    getTranslationFileContent,
+    getTranslationFileContentSync,
     LanguageRouter
 };
