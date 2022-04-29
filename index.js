@@ -265,6 +265,8 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
     const translationsAttr = (options.translationsAttr != undefined ? options.translationsAttr : DEFAULT_REQUEST_TRANSLATIONS_ATTR);
     const loadTranslations = (options.loadTranslations != undefined ? options.loadTranslations : DEFAULT_LOAD_TRANSLATIONS);
     const languagesFromTranslations = (options.languagesFromTranslations != undefined ? options.languagesFromTranslations : DEFAULT_LANGUAGES_FROM_DIR);
+    const updateUrlParam = options.updateUrlParam;
+    const updatePathParam = options.updatePathParam;
 
     const languages = new Set(langs);
 
