@@ -111,6 +111,7 @@ const reloadTranslations = async function(translationsDir=DEFAULT_TRANSLATIONS_D
                         } catch (ex){ if(!err) console.error(ex); }
                         if(--remaining == 0){
                             LANGUAGES[translationsDir] = Array.from(langs);
+                            LANGUAGES[translationsDir].sort();
                             DICTONARY[translationsDir] = dict;
                             resolve(LANGUAGES[translationsDir]);
                         }
@@ -168,7 +169,7 @@ const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR
         const key = "LANGUAGE_NAME_"+lang.toUpperCase();
         if(DICTONARY[translationsDir][lang]) names[lang] = DICTONARY[translationsDir][lang][key] || key;
     }
-    return Object.keys(names).sort().reduce(function(map, lang){ map[lang]=names[lang]; }, {});
+    return names;
 }
 
 

@@ -1,6 +1,6 @@
 {
   "name": "lup-language",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Node express middleware for detecting requested language",
   "main": "index.js",
   "scripts": {
