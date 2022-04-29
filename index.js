@@ -47,6 +47,12 @@ let DEFAULT_REQUEST_LANGUAGE_ATTR = "lang";
 /** Name of the output attribute added to the request object that points to a key/value array with the translations in the requested language */
 let DEFAULT_REQUEST_TRANSLATIONS_ATTR = "TEXT";
 
+/** Default behavior if the language prefix should be remove from the req.url attribute */
+let DEFAULT_UPDATE_URL_PARAM = true;
+
+/** Name of the attribute added to the request object containing the path of the URL without the language prefix */
+let DEFAULT_REQUEST_PROCESSED_PATH_ATTR = "PATH";
+
 
 
 let LANGUAGES = {}; // { translationsDir: [] }
@@ -222,8 +228,10 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
  *                     (if not defined 'DEFAULT_REQUEST_LANGUAGE_ATTR' will be used) <br>
  * - translationsAttr: "TEXT"  Name of the attribute added to the request object that points to a key/value array containing the translations in the requested language
  *                     (if not defined 'DEFAULT_REQUEST_TRANSLATIONS_ATTR' will be used) <br>
- * - updateUrlParam: true   If the req.url parameter should be updated (language prefix will be removed if present)
- * - updatePathParam: true  If the req.path parameter should be updated (language prefix will be removed if present)
+ * - updateUrlParam: true   If the req.url attribute should be updated (language prefix will be removed if present)
+ *                          (if not defined 'DEFAULT_UPDATE_URL_PARAM' will be used) <br>
+ * - processedPathAttr: "PATH"  Name of the attributed added to the request object containing the path of the url without the language prefix
+ *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
  function LanguageRouter(options={
@@ -242,8 +250,8 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
     cookieUpdate: DEFAULT_COOKIE_UPDATE, 
     langAttr: DEFAULT_REQUEST_LANGUAGE_ATTR,
     translationsAttr: DEFAULT_REQUEST_TRANSLATIONS_ATTR,
-    updateUrlParam: true,
-    updatePathParam: true,
+    updateUrlParam: DEFAULT_UPDATE_URL_PARAM,
+    updatePathParam: DEFAULT_UPDATE_PATH_PARAM,
 }){
     const defaultLang = options.default || DEFAULT_LANGUAGE;
 
@@ -265,8 +273,8 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
     const translationsAttr = (options.translationsAttr != undefined ? options.translationsAttr : DEFAULT_REQUEST_TRANSLATIONS_ATTR);
     const loadTranslations = (options.loadTranslations != undefined ? options.loadTranslations : DEFAULT_LOAD_TRANSLATIONS);
     const languagesFromTranslations = (options.languagesFromTranslations != undefined ? options.languagesFromTranslations : DEFAULT_LANGUAGES_FROM_DIR);
-    const updateUrlParam = options.updateUrlParam;
-    const updatePathParam = options.updatePathParam;
+    const updateUrlParam = (options.updateUrlParam != undefined ? options.updateUrlParam : DEFAULT_UPDATE_URL_PARAM);
+    const processedPathAttr = (options.processedPathAttr != undefined ? options.processedPathAttr : DEFAULT_REQUEST_PROCESSED_PATH_ATTR);
 
     const languages = new Set(langs);
 
@@ -290,20 +298,26 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
 
                 // updating request's url and path
                 let urlPath = ((hasSlash && idx < 0) ? "/" : "") + req.url.substring((hasSlash ? 1 : 0) + lang.length);
+
                 if(updateUrlParam)
                     req.url = urlPath;
-                if(updatePathParam)
-                    if(req.path){
-                        hasSlash = req.path.startsWith("/");
-                        idx = req.path.indexOf("/", hasSlash ? 1 : 0);
-                        req.path = req.path.substring(hasSlash?1:0, idx<0?req.path.length:idx) != lang ? req.path :
-                            ((hasSlash && idx < 0) ? "/" : "") + req.path.substring((hasSlash ? 1 : 0) + lang.length);
-                    } else {
-                        idx = urlPath.indexOf("?");
-                        req.path = urlPath.substring(0, idx<0 ? urlPath.length : idx);
-                    }
 
-            } else lang = false;
+                if(req.path){
+                    hasSlash = req.path.startsWith("/");
+                    idx = req.path.indexOf("/", hasSlash ? 1 : 0);
+
+                    req[processedPathAttr] = req.path.substring(hasSlash?1:0, idx<0?req.path.length:idx) == lang ? 
+                                                ((hasSlash && idx < 0) ? "/" : "") + req.path.substring((hasSlash ? 1 : 0) + lang.length) : 
+                                                req.path;
+                } else {
+                    idx = urlPath.indexOf("?");
+                    req[processedPathAttr] = urlPath.substring(0, idx<0 ? urlPath.length : idx);
+                }
+
+            } else {
+                lang = false;
+                req[processedPathAttr] = req.path;
+            }
         }
 
         // Parse cookie
@@ -357,6 +371,8 @@ const getTranslationFileContentSync = function(fileName, translationsDir=DEFAULT
 
 
 module.exports = {
+    DEFAULT_USE_URI,
+    DEFAULT_USE_HTTP,
     DEFAULT_COOKIE_DOMAIN,
     DEFAULT_COOKIE_EXPIRE,
     DEFAULT_COOKIE_NAME,
@@ -368,6 +384,9 @@ module.exports = {
     DEFAULT_TRANSLATIONS_DIR,
     DEFAULT_LOAD_TRANSLATIONS,
     DEFAULT_LANGUAGES_FROM_DIR,
+    DEFAULT_REQUEST_TRANSLATIONS_ATTR,
+    DEFAULT_UPDATE_URL_PARAM,
+    DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
     reloadTranslations,
     getTranslations,
     getLanguageNames,
