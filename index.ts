@@ -120,7 +120,7 @@ export const reloadTranslations = async function(translationsDir: string = DEFAU
             });
         }
 
-        fs.access(TRANSLATIONS_DIR, function(err){
+        fs.access(TRANSLATIONS_DIR, function(err: any){
             if(!err) scanFiles();
             else fs.mkdir(TRANSLATIONS_DIR, {recursive: true}, function(err){
                 if(err) console.error(err); else scanFiles();
@@ -131,7 +131,7 @@ export const reloadTranslations = async function(translationsDir: string = DEFAU
 }
 
 
-const _getTranslations = function(lang: string, defaultLang: string, translationKeys: Array<string> | false, translationsDir=DEFAULT_TRANSLATIONS_DIR){
+const _getTranslations = function(lang: string, defaultLang: string, translationKeys: Array<string> | false, translationsDir: string = DEFAULT_TRANSLATIONS_DIR){
     translationKeys = (!translationKeys || translationKeys.length == 0) ? false : translationKeys;
     const dictornary = DICTONARY[translationsDir] ? (DICTONARY[translationsDir][lang] || DICTONARY[translationsDir][defaultLang] || {}) : {};
     const dict = translationKeys ? {} : dictornary;
@@ -148,7 +148,7 @@ const _getTranslations = function(lang: string, defaultLang: string, translation
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {<key>: "<translation>"}
  */
-export const getTranslations = async function(lang: string, defaultLang: string, translationKeys=[], translationsDir=DEFAULT_TRANSLATIONS_DIR){
+export const getTranslations = async function(lang: string, defaultLang: string, translationKeys=[], translationsDir: string = DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     if(!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
     return _getTranslations(lang, defaultLang, translationKeys, translationsDir);
@@ -160,7 +160,7 @@ export const getTranslations = async function(lang: string, defaultLang: string,
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
  * @returns {<lang>: "<native name>"}
  */
-export const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATIONS_DIR){
+export const getLanguageNames = async function(translationsDir: string = DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     if(!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
@@ -179,7 +179,7 @@ export const getLanguageNames = async function(translationsDir=DEFAULT_TRANSLATI
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {String} Contents of the file
  */
-export const getTranslationFileContent = async function(fileName: string, translationsDir=DEFAULT_TRANSLATIONS_DIR){
+export const getTranslationFileContent = async function(fileName: string, translationsDir: string = DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     return new Promise(function(resolve, reject){
         const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
@@ -196,7 +196,7 @@ export const getTranslationFileContent = async function(fileName: string, transl
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {String} Contents of the file
  */
-export const getTranslationFileContentSync = function(fileName: string, translationsDir=DEFAULT_TRANSLATIONS_DIR){
+export const getTranslationFileContentSync = function(fileName: string, translationsDir: string = DEFAULT_TRANSLATIONS_DIR){
     if(!translationsDir) translationsDir=DEFAULT_TRANSLATIONS_DIR;
     const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
     return fs.readFileSync(filePath);
@@ -235,7 +235,7 @@ export const getTranslationFileContentSync = function(fileName: string, translat
  *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
-export function LanguageRouter(options={
+export function LanguageRouter(options: any = {
     default: DEFAULT_LANGUAGE,
     languages: DEFAULT_LANGUAGES,
     loadTranslations: DEFAULT_LOAD_TRANSLATIONS,
