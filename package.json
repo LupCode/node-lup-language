@@ -1,6 +1,6 @@
 {
   "name": "lup-language",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Node express middleware for detecting requested language",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   "homepage": "https://github.com/LupCode/node-lup-language#readme",
   "dependencies": {
     "fs": "0.0.1-security",
-    "lup-root": "^1.2.0"
+    "lup-root": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^17.0.31",
