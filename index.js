@@ -38,40 +38,40 @@ import { ROOT } from 'lup-root';
 import fs from 'fs';
 import path from 'path';
 /** Default language code that will be used if no other method can detect the language */
-var DEFAULT_LANGUAGE = "en";
+export var DEFAULT_LANGUAGE = "en";
 /** Default list of language codes that will be accepted */
-var DEFAULT_LANGUAGES = ["en"];
+export var DEFAULT_LANGUAGES = ["en"];
 /** Default if translations from directory should be loaded */
-var DEFAULT_LOAD_TRANSLATIONS = true;
+export var DEFAULT_LOAD_TRANSLATIONS = true;
 /** Default relative path from project root to a directory containing translation files.
  * Translation files are json files with the name of a language code e.g. 'en.json'.
  * Can also be an absolute path */
-var DEFAULT_TRANSLATIONS_DIR = "./translations/";
+export var DEFAULT_TRANSLATIONS_DIR = "./translations/";
 /** Default if language codes should be loaded from files in translations directory */
-var DEFAULT_LANGUAGES_FROM_DIR = true;
+export var DEFAULT_LANGUAGES_FROM_DIR = true;
 /** Default setting if URI should be used for language detection */
-var DEFAULT_USE_URI = true;
+export var DEFAULT_USE_URI = true;
 /** Default setting if HTTP header (accept-language) should be used for language detection */
-var DEFAULT_USE_HTTP = true;
+export var DEFAULT_USE_HTTP = true;
 /** Default name of cookie to read/store user's language or null to disable cookie reading/storing */
-var DEFAULT_COOKIE_NAME = "L";
+export var DEFAULT_COOKIE_NAME = "L";
 /** Default expire seconds for cookie that gets set */
-var DEFAULT_COOKIE_EXPIRE = 5184000;
+export var DEFAULT_COOKIE_EXPIRE = 5184000;
 /** Default path for which cookie will be set (can be null to not set property) */
-var DEFAULT_COOKIE_PATH = "/";
+export var DEFAULT_COOKIE_PATH = "/";
 /** Default domain the cookie will be set for (can be null to not set property) */
-var DEFAULT_COOKIE_DOMAIN = null;
+export var DEFAULT_COOKIE_DOMAIN = null;
 /** Default cookie setting if cookie should be set containing detected language
  * (otherwise cookie just get read if 'DEFAULT_COOKIE_NAME' is valid) */
-var DEFAULT_COOKIE_UPDATE = true;
+export var DEFAULT_COOKIE_UPDATE = true;
 /** Name of the output attribute added to the request object that tells which language is requested */
-var DEFAULT_REQUEST_LANGUAGE_ATTR = "lang";
+export var DEFAULT_REQUEST_LANGUAGE_ATTR = "lang";
 /** Name of the output attribute added to the request object that points to a key/value array with the translations in the requested language */
-var DEFAULT_REQUEST_TRANSLATIONS_ATTR = "TEXT";
+export var DEFAULT_REQUEST_TRANSLATIONS_ATTR = "TEXT";
 /** Default behavior if the language prefix should be remove from the req.url attribute */
-var DEFAULT_UPDATE_URL_PARAM = true;
+export var DEFAULT_UPDATE_URL_PARAM = true;
 /** Name of the attribute added to the request object containing the path of the URL without the language prefix */
-var DEFAULT_REQUEST_PROCESSED_PATH_ATTR = "PATH";
+export var DEFAULT_REQUEST_PROCESSED_PATH_ATTR = "PATH";
 var LANGUAGES = {}; // { translationsDir: [] }
 var DICTONARY = {}; // { translationsDir: {lang: {key: translation} } }
 /**
@@ -79,7 +79,7 @@ var DICTONARY = {}; // { translationsDir: {lang: {key: translation} } }
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns Promise that resolves with a list of language codes that where found after translations have been reloaded from files
  */
-var reloadTranslations = function (translationsDir) {
+export var reloadTranslations = function (translationsDir) {
     if (translationsDir === void 0) { translationsDir = DEFAULT_TRANSLATIONS_DIR; }
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -186,7 +186,7 @@ var _getTranslations = function (lang, defaultLang, translationKeys, translation
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {<key>: "<translation>"}
  */
-var getTranslations = function (lang, defaultLang, translationKeys, translationsDir) {
+export var getTranslations = function (lang, defaultLang, translationKeys, translationsDir) {
     if (translationKeys === void 0) { translationKeys = []; }
     if (translationsDir === void 0) { translationsDir = DEFAULT_TRANSLATIONS_DIR; }
     return __awaiter(this, void 0, void 0, function () {
@@ -210,7 +210,7 @@ var getTranslations = function (lang, defaultLang, translationKeys, translations
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
  * @returns {<lang>: "<native name>"}
  */
-var getLanguageNames = function (translationsDir) {
+export var getLanguageNames = function (translationsDir) {
     if (translationsDir === void 0) { translationsDir = DEFAULT_TRANSLATIONS_DIR; }
     return __awaiter(this, void 0, void 0, function () {
         var names, _i, _a, lang, key;
@@ -243,7 +243,7 @@ var getLanguageNames = function (translationsDir) {
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {String} Contents of the file
  */
-var getTranslationFileContent = function (fileName, translationsDir) {
+export var getTranslationFileContent = function (fileName, translationsDir) {
     if (translationsDir === void 0) { translationsDir = DEFAULT_TRANSLATIONS_DIR; }
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -267,7 +267,7 @@ var getTranslationFileContent = function (fileName, translationsDir) {
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {String} Contents of the file
  */
-var getTranslationFileContentSync = function (fileName, translationsDir) {
+export var getTranslationFileContentSync = function (fileName, translationsDir) {
     if (translationsDir === void 0) { translationsDir = DEFAULT_TRANSLATIONS_DIR; }
     if (!translationsDir)
         translationsDir = DEFAULT_TRANSLATIONS_DIR;
@@ -306,7 +306,7 @@ var getTranslationFileContentSync = function (fileName, translationsDir) {
  *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
-function LanguageRouter(options) {
+export function LanguageRouter(options) {
     if (options === void 0) { options = {
         default: DEFAULT_LANGUAGE,
         languages: DEFAULT_LANGUAGES,
