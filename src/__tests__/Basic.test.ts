@@ -1,7 +1,7 @@
 import { ROOT } from 'lup-root';
 import * as lupLang from '../index';
 
-const TRANSLATIONS_DIR = ROOT + 'src/__tests__/translations';
+const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
 
 test('Loading languages from translations directory', async () => {
   await expect(lupLang.reloadTranslations(TRANSLATIONS_DIR)).resolves.not.toThrow();

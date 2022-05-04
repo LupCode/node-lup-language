@@ -8,7 +8,7 @@ import {
   LanguageRouter,
 } from '../index';
 
-const TRANSLATIONS_DIR = ROOT + 'src/__tests__/translations';
+const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
 
 var handle: Function;
 beforeAll(async () => {
