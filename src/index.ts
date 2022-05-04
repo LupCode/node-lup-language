@@ -63,7 +63,7 @@ const DICTONARY: any = {}; // { translationsDir: {lang: {key: translation} } }
  * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns Promise that resolves with a list of language codes that where found after translations have been reloaded from files
  */
-export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<void> => {
+export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<string[]> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   LANGUAGES[translationsDir] = [];
   DICTONARY[translationsDir] = [];
@@ -135,7 +135,7 @@ const _getTranslations = (
   defaultLang: string,
   translationKeys: string[] | false,
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
-) => {
+): {[key: string]: string} => {
   translationKeys = !translationKeys || translationKeys.length === 0 ? false : translationKeys;
   const dictornary = DICTONARY[translationsDir]
     ? DICTONARY[translationsDir][lang] || DICTONARY[translationsDir][defaultLang] || {}
@@ -156,9 +156,9 @@ const _getTranslations = (
 export const getTranslations = async (
   lang: string,
   defaultLang: string,
-  translationKeys = [],
+  translationKeys: string[] = [],
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
-): Promise<{}> => {
+): Promise<{[key: string]: string}> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
   return _getTranslations(lang, defaultLang, translationKeys, translationsDir);
@@ -169,7 +169,7 @@ export const getTranslations = async (
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
  * @returns {<lang>: "<native name>"}
  */
-export const getLanguageNames = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<{}> => {
+export const getLanguageNames = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<Object> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
@@ -248,7 +248,7 @@ export const getTranslationFileContentSync = (
  *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
-export const LanguageRouter = (
+export const LanguageRouter = async(
   options: any = {
     default: DEFAULT_LANGUAGE,
     languages: DEFAULT_LANGUAGES,
@@ -302,13 +302,11 @@ export const LanguageRouter = (
   const languages = new Set(languagesArr);
 
   if (loadTranslations) {
-    reloadTranslations(translationsDir).then((ls: any) => {
-      if (!languagesFromTranslations) return;
-      for (const l of ls) languages.add(l);
-    });
+    const ls = await reloadTranslations(translationsDir);
+    if (languagesFromTranslations) for (const l of ls) languages.add(l);
   }
 
-  return (req: any, res: any, next: any) => {
+  return (req: any, res: any, next?: any) => {
     // Parse URI
     let lang = useUri ? req.url : false;
     if (lang) {
@@ -389,7 +387,7 @@ export const LanguageRouter = (
 
     if (loadTranslations) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
-    next();
+    if(next) next();
   };
 };
 

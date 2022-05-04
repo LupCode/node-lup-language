@@ -1,3 +1,8 @@
+![GitHub package.json version](https://img.shields.io/github/package-json/v/LupCode/node-lup-language)
+![npm bundle size](https://img.shields.io/bundlephobia/min/lup-language)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/LupCode/node-lup-language/On%20Push)
+![NPM](https://img.shields.io/npm/l/lup-language)
+
 # lup-language
 Node express middleware for detecting requested language based on:
 1. URI prefix e.g. /**en**/home/

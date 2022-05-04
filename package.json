@@ -39,7 +39,7 @@
   "homepage": "https://github.com/LupCode/node-lup-language#readme",
   "dependencies": {
     "fs": "0.0.1-security",
-    "lup-root": "^1.3.0"
+    "lup-root": "^1.3.2"
   },
   "devDependencies": {
     "@types/jest": "^27.5.0",
