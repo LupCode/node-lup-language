@@ -135,7 +135,7 @@ const _getTranslations = (
   defaultLang: string,
   translationKeys: string[] | false,
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
-): {[key: string]: string} => {
+): { [key: string]: string } => {
   translationKeys = !translationKeys || translationKeys.length === 0 ? false : translationKeys;
   const dictornary = DICTONARY[translationsDir]
     ? DICTONARY[translationsDir][lang] || DICTONARY[translationsDir][defaultLang] || {}
@@ -158,7 +158,7 @@ export const getTranslations = async (
   defaultLang: string,
   translationKeys: string[] = [],
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
-): Promise<{[key: string]: string}> => {
+): Promise<{ [key: string]: string }> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
   return _getTranslations(lang, defaultLang, translationKeys, translationsDir);
@@ -169,11 +169,13 @@ export const getTranslations = async (
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
  * @returns {<lang>: "<native name>"}
  */
-export const getLanguageNames = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<Object> => {
+export const getLanguageNames = async (
+  translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
+): Promise<{ [key: string]: string }> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
-  const names: any = {};
+  const names: { [key: string]: string } = {};
   for (const lang of LANGUAGES[translationsDir]) {
     const key = 'LANGUAGE_NAME_' + lang.toUpperCase();
     if (DICTONARY[translationsDir][lang]) names[lang] = DICTONARY[translationsDir][lang][key] || key;
@@ -248,7 +250,7 @@ export const getTranslationFileContentSync = (
  *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
-export const LanguageRouter = async(
+export const LanguageRouter = async (
   options: any = {
     default: DEFAULT_LANGUAGE,
     languages: DEFAULT_LANGUAGES,
@@ -387,7 +389,7 @@ export const LanguageRouter = async(
 
     if (loadTranslations) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
-    if(next) next();
+    if (next) next();
   };
 };
 
