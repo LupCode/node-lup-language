@@ -55,8 +55,8 @@ export let DEFAULT_UPDATE_URL_PARAM: boolean = true;
 /** Name of the attribute added to the request object containing the path of the URL without the language prefix */
 export let DEFAULT_REQUEST_PROCESSED_PATH_ATTR: string = 'PATH';
 
-const LANGUAGES: any = {}; // { translationsDir: [] }
-const DICTONARY: any = {}; // { translationsDir: {lang: {key: translation} } }
+const LANGUAGES: { [translationsDir: string]: string[] } = {}; // { translationsDir: [] }
+const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]: string } } } = {}; // { translationsDir: {lang: {key: translation} } }
 
 /**
  * Reloads translations from files inside given directory
@@ -66,7 +66,7 @@ const DICTONARY: any = {}; // { translationsDir: {lang: {key: translation} } }
 export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<string[]> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   LANGUAGES[translationsDir] = [];
-  DICTONARY[translationsDir] = [];
+  DICTONARY[translationsDir] = {};
   return new Promise((resolve, reject) => {
     const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
 
@@ -77,7 +77,7 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
           reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ')');
         }
         const dict: any = {};
-        const langs = new Set();
+        const langs = new Set<string>();
         let globals: any = null;
         let remaining = files.length;
         for (let i = 0; i < files.length; i++) {
@@ -165,8 +165,20 @@ export const getTranslations = async (
 };
 
 /**
+ * Returns loaded language codes found in translations directory
+ * @param {String} translationsDir Relative path to directory containing JSON files with translations
+ * @returns {["languageCode"]} List of language codes
+ */
+export const getLocales = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<string[]> => {
+  if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
+  if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
+  return [...LANGUAGES[translationsDir]];
+};
+
+/**
  * Returns a map of all found languages and their native name.
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'
+ * @param {String} translationsDir Relative path to directory containing JSON files with translations
  * @returns {<lang>: "<native name>"}
  */
 export const getLanguageNames = async (
@@ -175,10 +187,13 @@ export const getLanguageNames = async (
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
+  const dict = DICTONARY[translationsDir];
   const names: { [key: string]: string } = {};
+  const keyLocale = 'LANGUAGE_NAME';
+
   for (const lang of LANGUAGES[translationsDir]) {
-    const key = 'LANGUAGE_NAME_' + lang.toUpperCase();
-    if (DICTONARY[translationsDir][lang]) names[lang] = DICTONARY[translationsDir][lang][key] || key;
+    const keyGlobal = 'LANGUAGE_NAME_' + lang.toUpperCase();
+    names[lang] = dict[lang][keyLocale] || dict[lang][keyGlobal] || lang.toUpperCase();
   }
   return names;
 };
@@ -308,6 +323,9 @@ export const LanguageRouter = async (
     if (languagesFromTranslations) for (const l of ls) languages.add(l);
   }
 
+  const langsSorted = Array.from(languages);
+  langsSorted.sort();
+
   return (req: any, res: any, next?: any) => {
     // Parse URI
     let lang = useUri ? req.url : false;
@@ -386,6 +404,7 @@ export const LanguageRouter = async (
     }
 
     req[langAttr] = lang;
+    req[langAttr + 's'] = [...langsSorted];
 
     if (loadTranslations) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
@@ -412,6 +431,7 @@ export default {
   DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
   reloadTranslations,
   getTranslations,
+  getLocales,
   getLanguageNames,
   getTranslationFileContent,
   getTranslationFileContentSync,

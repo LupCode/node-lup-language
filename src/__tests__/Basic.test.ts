@@ -13,12 +13,19 @@ describe('Checking loaded translations', () => {
   });
 
   test('Language codes correctly determined', async () => {
+    const foundLocales = await lupLang.getLocales(TRANSLATIONS_DIR);
+    expect(foundLocales).toBeInstanceOf(Array);
+    expect(foundLocales.length).toBe(2);
+    expect(foundLocales).toContain('en');
+    expect(foundLocales).toContain('de');
+  });
+
+  test('Language names correctly loaded', async () => {
     const languageNames = await lupLang.getLanguageNames(TRANSLATIONS_DIR);
     expect(languageNames).toBeInstanceOf(Object);
-    const langs = Object.keys(languageNames);
-    expect(langs.length).toBe(2);
-    expect(langs).toContain('en');
-    expect(langs).toContain('de');
+    expect(Object.keys(languageNames).length).toBe(2);
+    expect(languageNames['de']).toEqual('Deutsch');
+    expect(languageNames['en']).toEqual('English');
   });
 
   test('Load all translations if no translation keys are specified', async () => {

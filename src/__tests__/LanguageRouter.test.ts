@@ -5,16 +5,19 @@ import {
   DEFAULT_REQUEST_LANGUAGE_ATTR,
   DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
   DEFAULT_REQUEST_TRANSLATIONS_ATTR,
+  getLocales,
   LanguageRouter,
 } from '../index';
 
 const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
 
 var handle: Function;
+var locales: string[];
 beforeAll(async () => {
   handle = await LanguageRouter({
     translationsDir: TRANSLATIONS_DIR,
   });
+  locales = await getLocales(TRANSLATIONS_DIR);
 });
 
 const emulateRequestResponse = function (
@@ -44,6 +47,15 @@ const emulateRequestResponse = function (
 test('LanguageRouter valid handle', () => {
   expect(handle).not.toBeNull();
   expect(handle).toBeInstanceOf(Function);
+});
+
+test('Language code list present', () => {
+  const [req, _res, exec] = emulateRequestResponse('/hello', null, null);
+  expect(exec).not.toThrow();
+  let foundList = req[DEFAULT_REQUEST_LANGUAGE_ATTR + 's'];
+  expect(foundList).toBeInstanceOf(Array);
+  expect(foundList.length === locales.length);
+  expect(foundList).toEqual(expect.arrayContaining(locales));
 });
 
 test('Detect correct language from URI', () => {
