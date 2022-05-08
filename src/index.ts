@@ -133,15 +133,19 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
 const _getTranslations = (
   lang: string,
   defaultLang: string,
-  translationKeys: string[] | false,
+  translationKeys: string[] | Set<string> | null | undefined,
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
 ): { [key: string]: string } => {
-  translationKeys = !translationKeys || translationKeys.length === 0 ? false : translationKeys;
+  const transKeys: Set<string> = !translationKeys
+    ? new Set()
+    : !(translationKeys instanceof Set)
+    ? new Set(translationKeys)
+    : translationKeys;
   const dictornary = DICTONARY[translationsDir]
     ? DICTONARY[translationsDir][lang] || DICTONARY[translationsDir][defaultLang] || {}
     : {};
-  const dict = translationKeys ? {} : dictornary;
-  if (translationKeys) for (const k of translationKeys) dict[k] = dictornary[k] || k;
+  const dict = transKeys.size !== 0 ? {} : dictornary;
+  if (transKeys.size !== 0) transKeys.forEach((k) => (dict[k] = dictornary[k] || k));
   return dict;
 };
 
@@ -156,7 +160,7 @@ const _getTranslations = (
 export const getTranslations = async (
   lang: string,
   defaultLang: string,
-  translationKeys: string[] = [],
+  translationKeys: string[] | Set<string> | null | undefined = [],
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
 ): Promise<{ [key: string]: string }> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
