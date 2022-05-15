@@ -26,6 +26,12 @@ export let DEFAULT_USE_URI: boolean = true;
 /** Default setting if HTTP header (accept-language) should be used for language detection */
 export let DEFAULT_USE_HTTP: boolean = true;
 
+/** Default setting if request to root document should be redirected to language prefixed root */
+export let DEFAULT_REDIRECT_ROOT: boolean = false;
+
+/** If root gets redirected to language prefixed root this HTTP response code will be sent */
+export let DEFAULT_REDIRECT_ROOT_RESPONSE_CODE = 302;
+
 /** Default name of cookie to read/store user's language or null to disable cookie reading/storing */
 export let DEFAULT_COOKIE_NAME: string = 'L';
 
@@ -245,6 +251,8 @@ export const getTranslationFileContentSync = (
  * - languages: []  List of language codes that will be accepted (if not defined 'DEFAULT_LANGUAGES' will be used) <br>
  * - useUri: true  Boolean if URI should be used for language detection (if not defined 'DEFAULT_USE_URI' will be used) <br>
  * - useHttp: true  Boolean if HTTP header should be used for language detection (if not defined 'DEFAULT_USE_HTTP' will be used) <br>
+ * - redirectRoot: false  If true then requests to the root document '/' will be redirected to the language prefixed root e.g '/en/'
+ *                        (if not defined 'DEFAULT_REDIRECT_ROOT' will be used) <br>
  * - cookieName: "L"  Name of cookie to read/store user's language or null to disable cookie reading/storing
  *                    (if not defined 'DEFAULT_COOKIE_NAME' will be used) <br>
  * - cookieExpire: 5184000  Expire seconds for cookie that gets set (if not defined 'DEFAULT_COOKIE_EXPIRE' will be used) <br>
@@ -279,6 +287,7 @@ export const LanguageRouter = async (
     translationsDir: DEFAULT_TRANSLATIONS_DIR,
     useUri: DEFAULT_USE_URI,
     useHttp: DEFAULT_USE_HTTP,
+    redirectRoot: DEFAULT_REDIRECT_ROOT,
     cookieName: DEFAULT_COOKIE_NAME,
     cookieExpire: DEFAULT_COOKIE_EXPIRE,
     cookiePath: DEFAULT_COOKIE_PATH,
@@ -303,6 +312,7 @@ export const LanguageRouter = async (
 
   const useUri = options.useUri !== undefined ? options.useUri : DEFAULT_USE_URI;
   const useHttp = options.useHttp !== undefined ? options.useHttp : DEFAULT_USE_HTTP;
+  const redirectRoot = options.redirectRoot !== undefined ? options.redirectRoot : DEFAULT_REDIRECT_ROOT;
   const cookieName = options.cookieName !== undefined ? options.cookieName : DEFAULT_COOKIE_NAME;
   const cookieExpire = options.cookieExpire || DEFAULT_COOKIE_EXPIRE;
   const cookiePath = options.cookiePath !== undefined ? options.cookiePath : DEFAULT_COOKIE_PATH;
@@ -407,6 +417,12 @@ export const LanguageRouter = async (
       res.set('set-cookie', cookies);
     }
 
+    // redirect root if not language prefixed
+    if (redirectRoot && req.url.length <= 1) {
+      res.redirect(DEFAULT_REDIRECT_ROOT_RESPONSE_CODE, '/' + lang + '/');
+      return;
+    }
+
     req[langAttr] = lang;
     req[langAttr + 's'] = [...langsSorted];
 
@@ -426,6 +442,8 @@ export default {
   DEFAULT_COOKIE_UPDATE,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGES,
+  DEFAULT_REDIRECT_ROOT,
+  DEFAULT_REDIRECT_ROOT_RESPONSE_CODE,
   DEFAULT_REQUEST_LANGUAGE_ATTR,
   DEFAULT_TRANSLATIONS_DIR,
   DEFAULT_LOAD_TRANSLATIONS,

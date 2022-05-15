@@ -16,6 +16,7 @@ var locales: string[];
 beforeAll(async () => {
   handle = await LanguageRouter({
     translationsDir: TRANSLATIONS_DIR,
+    redirectRoot: true,
   });
   locales = await getLocales(TRANSLATIONS_DIR);
 });
@@ -34,6 +35,8 @@ const emulateRequestResponse = function (
   const res: any = new Object();
   res.get = (key: string) => res[key];
   res.set = (key: string, value: any) => (res[key] = value);
+  res.redirects = [];
+  res.redirect = (status: number, location: string) => res.redirects.push({ location, status });
 
   return [
     req,
@@ -94,4 +97,11 @@ test('Path attribute set', () => {
   expect(exec).not.toThrow();
   expect(req[DEFAULT_REQUEST_PROCESSED_PATH_ATTR]).toBeDefined();
   expect(req[DEFAULT_REQUEST_PROCESSED_PATH_ATTR]).toEqual('/hello');
+});
+
+test('Redirect root document to language prefixed root', () => {
+  const [req, res, exec] = emulateRequestResponse('/', 'de', null);
+  expect(exec).not.toThrow();
+  expect(res.redirects.length == 1);
+  expect(res.redirects[0].location === '/de/');
 });
