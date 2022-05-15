@@ -341,6 +341,8 @@ export const LanguageRouter = async (
   langsSorted.sort();
 
   return (req: any, res: any, next?: any) => {
+    const isRoot = req.url.length <= 1;
+
     // Parse URI
     let lang = useUri ? req.url : false;
     if (lang) {
@@ -418,7 +420,7 @@ export const LanguageRouter = async (
     }
 
     // redirect root if not language prefixed
-    if (redirectRoot && req.url.length <= 1) {
+    if (redirectRoot && isRoot) {
       res.redirect(DEFAULT_REDIRECT_ROOT_RESPONSE_CODE, '/' + lang + '/');
       return;
     }

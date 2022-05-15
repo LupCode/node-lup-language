@@ -102,6 +102,12 @@ test('Path attribute set', () => {
 test('Redirect root document to language prefixed root', () => {
   const [req, res, exec] = emulateRequestResponse('/', 'de', null);
   expect(exec).not.toThrow();
-  expect(res.redirects.length == 1);
+  expect(res.redirects.length === 1);
   expect(res.redirects[0].location === '/de/');
+});
+
+test('Do not redirect non-root documents', () => {
+  const [req, res, exec] = emulateRequestResponse('/en/', 'de', null);
+  expect(exec).not.toThrow();
+  expect(res.redirects.length === 0);
 });
