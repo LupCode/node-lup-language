@@ -63,6 +63,7 @@ export let DEFAULT_REQUEST_PROCESSED_PATH_ATTR: string = 'PATH';
 
 
 
+
 export interface WithPreloadMethod {
   /**
    * Optionally preload LanguageRouter so first request can be handled faster
@@ -70,6 +71,9 @@ export interface WithPreloadMethod {
    */
   preload: () => Promise<void>;
 }
+
+export type LanguageDetectionRequestHandler = ((req: any, res: any, next?: () => void) => Promise<void>) & WithPreloadMethod;
+
 
 
 const LANGUAGES: { [translationsDir: string]: string[] } = {}; // { translationsDir: [] }
@@ -309,7 +313,7 @@ export const LanguageRouter = (
     updateUrlParam: DEFAULT_UPDATE_URL_PARAM,
     processedPathAttr: DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
   },
-): WithPreloadMethod => {
+): LanguageDetectionRequestHandler => {
   const defaultLang = options.default || DEFAULT_LANGUAGE;
 
   let languagesArr: string[] = []; // later converted to Set 'languages'
