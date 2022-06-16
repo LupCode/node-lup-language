@@ -11,13 +11,14 @@ import {
 
 const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
 
-var handle: Function;
+var handle: Function | any;
 var locales: string[];
 beforeAll(async () => {
-  handle = await LanguageRouter({
+  handle = LanguageRouter({
     translationsDir: TRANSLATIONS_DIR,
     redirectRoot: true,
   });
+  await handle.preload();
   locales = await getLocales(TRANSLATIONS_DIR);
 });
 
@@ -41,8 +42,8 @@ const emulateRequestResponse = function (
   return [
     req,
     res,
-    function () {
-      handle(req, res);
+    async function () {
+      await handle(req, res);
     },
   ];
 };
@@ -52,7 +53,7 @@ test('LanguageRouter valid handle', () => {
   expect(handle).toBeInstanceOf(Function);
 });
 
-test('Language code list present', () => {
+test('Language code list present', async () => {
   const [req, _res, exec] = emulateRequestResponse('/hello', null, null);
   expect(exec).not.toThrow();
   let foundList = req[DEFAULT_REQUEST_LANGUAGE_ATTR + 's'];

@@ -61,6 +61,17 @@ export let DEFAULT_UPDATE_URL_PARAM: boolean = true;
 /** Name of the attribute added to the request object containing the path of the URL without the language prefix */
 export let DEFAULT_REQUEST_PROCESSED_PATH_ATTR: string = 'PATH';
 
+
+
+export interface WithPreloadMethod {
+  /**
+   * Optionally preload LanguageRouter so first request can be handled faster
+   * @returns Nothing
+   */
+  preload: () => Promise<void>;
+}
+
+
 const LANGUAGES: { [translationsDir: string]: string[] } = {}; // { translationsDir: [] }
 const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]: string } } } = {}; // { translationsDir: {lang: {key: translation} } }
 
@@ -277,7 +288,7 @@ export const getTranslationFileContentSync = (
  *                              (if not defined 'DEFAULT_REQUEST_PROCESSED_PATH_ATTR' will be used) <br>
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests
  */
-export const LanguageRouter = async (
+export const LanguageRouter = (
   options: any = {
     default: DEFAULT_LANGUAGE,
     languages: DEFAULT_LANGUAGES,
@@ -298,7 +309,7 @@ export const LanguageRouter = async (
     updateUrlParam: DEFAULT_UPDATE_URL_PARAM,
     processedPathAttr: DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
   },
-) => {
+): WithPreloadMethod => {
   const defaultLang = options.default || DEFAULT_LANGUAGE;
 
   let languagesArr: string[] = []; // later converted to Set 'languages'
@@ -330,17 +341,13 @@ export const LanguageRouter = async (
   const processedPathAttr =
     options.processedPathAttr !== undefined ? options.processedPathAttr : DEFAULT_REQUEST_PROCESSED_PATH_ATTR;
 
-  const languages = new Set(languagesArr);
+  let loadedLangs = false;
+  const languagesSorted: string[] = [];
+  const languagesSet = new Set<string>(languagesArr);
 
-  if (loadTranslations) {
-    const ls = await reloadTranslations(translationsDir);
-    if (languagesFromTranslations) for (const l of ls) languages.add(l);
-  }
+  const handler = async (req: any, res: any, next?: any) => {
+    if (!loadedLangs) await handler.preload();
 
-  const langsSorted = Array.from(languages);
-  langsSorted.sort();
-
-  return (req: any, res: any, next?: any) => {
     const isRoot = req.url.length <= 1;
 
     // Parse URI
@@ -350,7 +357,7 @@ export const LanguageRouter = async (
       lang = hasSlash ? lang.substring(1) : lang;
       let idx = lang.indexOf('/');
       lang = idx >= 0 ? lang.substring(0, idx) : lang;
-      if (languages.has(lang)) {
+      if (languagesSet.has(lang)) {
         // updating request's url and path
         const urlPath = (hasSlash && idx < 0 ? '/' : '') + req.url.substring((hasSlash ? 1 : 0) + lang.length);
 
@@ -383,7 +390,7 @@ export const LanguageRouter = async (
         if (idx <= 0) continue;
         if ((idx > 0 ? entry.substring(0, idx) : entry).trim() === cookieName) {
           lang = idx > 0 ? entry.substring(idx + 1).trim() : '';
-          if (languages.has(lang)) break;
+          if (languagesSet.has(lang)) break;
           else lang = false;
         }
       }
@@ -398,7 +405,7 @@ export const LanguageRouter = async (
           .map((v: string) => v.trim())
           .filter((v: string) => v.length > 0 && !v.startsWith('q='));
         for (let i = 0; i < langs.length; i++)
-          if (languages.has(langs[i])) {
+          if (languagesSet.has(langs[i])) {
             lang = langs[i];
             break;
           }
@@ -426,13 +433,34 @@ export const LanguageRouter = async (
     }
 
     req[langAttr] = lang;
-    req[langAttr + 's'] = [...langsSorted];
+    req[langAttr + 's'] = [...languagesSorted];
 
     if (loadTranslations) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
     if (next) next();
   };
+
+  /**
+   * Optionally preload LanguageRouter so first request can be handled faster
+   * @returns Nothing
+   */
+  handler.preload = async() => {
+    if(loadedLangs) return;
+    loadedLangs = true;
+    if (loadTranslations) {
+      const ls = await reloadTranslations(translationsDir);
+      if (languagesFromTranslations) for (const l of ls) languagesSet.add(l);
+    }
+    languagesSet.forEach((l: string) => languagesSorted.push(l));
+    languagesSorted.sort();
+  }
+
+
+  return handler;
 };
+
+
+
 
 export default {
   DEFAULT_USE_URI,
