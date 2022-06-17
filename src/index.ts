@@ -61,9 +61,6 @@ export let DEFAULT_UPDATE_URL_PARAM: boolean = true;
 /** Name of the attribute added to the request object containing the path of the URL without the language prefix */
 export let DEFAULT_REQUEST_PROCESSED_PATH_ATTR: string = 'PATH';
 
-
-
-
 export interface WithPreloadMethod {
   /**
    * Optionally preload LanguageRouter so first request can be handled faster
@@ -72,9 +69,8 @@ export interface WithPreloadMethod {
   preload: () => Promise<void>;
 }
 
-export type LanguageDetectionRequestHandler = ((req: any, res: any, next?: () => void) => Promise<void>) & WithPreloadMethod;
-
-
+export type LanguageDetectionRequestHandler = ((req: any, res: any, next?: () => void) => Promise<void>) &
+  WithPreloadMethod;
 
 const LANGUAGES: { [translationsDir: string]: string[] } = {}; // { translationsDir: [] }
 const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]: string } } } = {}; // { translationsDir: {lang: {key: translation} } }
@@ -175,7 +171,7 @@ const _getTranslations = (
  * @param {String} lang Language code for which translations should be loaded
  * @param {String} defaultLang Default language code if given 'lang' is not supported
  * @param {Array} translationKeys If not empty only translations with given keys will be included in output (if empty all translations will be included)
- * @param {String} translationsDir Relative path to directory containing JSON files with translations
+ * @param {String} translationsDir Relative path to directory containing JSON files with translations (optional)
  * @returns {<key>: "<translation>"}
  */
 export const getTranslations = async (
@@ -187,6 +183,23 @@ export const getTranslations = async (
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
   return _getTranslations(lang, defaultLang, translationKeys, translationsDir);
+};
+
+/**
+ * Returns a translation for a given key in the given language
+ * @param {String} lang Language code of language the translation should be in
+ * @param {String} defaultLang Default language code if given 'lang' is not supported
+ * @param {String} translationKey Key that should be looked up in the translations
+ * @param {String} translationDir Relative path to directory containing JSON files with translations (optional)
+ * @returns Promise that resolves with the translation or with the given key if no translation found
+ */
+export const getTranslation = async (
+  lang: string,
+  defaultLang: string,
+  translationKey: string,
+  translationDir: string = DEFAULT_TRANSLATIONS_DIR,
+): Promise<string> => {
+  return (await getTranslations(lang, defaultLang, [translationKey], translationDir))[translationKey];
 };
 
 /**
@@ -448,8 +461,8 @@ export const LanguageRouter = (
    * Optionally preload LanguageRouter so first request can be handled faster
    * @returns Nothing
    */
-  handler.preload = async() => {
-    if(loadedLangs) return;
+  handler.preload = async () => {
+    if (loadedLangs) return;
     loadedLangs = true;
     if (loadTranslations) {
       const ls = await reloadTranslations(translationsDir);
@@ -457,14 +470,10 @@ export const LanguageRouter = (
     }
     languagesSet.forEach((l: string) => languagesSorted.push(l));
     languagesSorted.sort();
-  }
-
+  };
 
   return handler;
 };
-
-
-
 
 export default {
   DEFAULT_USE_URI,
@@ -486,6 +495,7 @@ export default {
   DEFAULT_UPDATE_URL_PARAM,
   DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
   reloadTranslations,
+  getTranslation,
   getTranslations,
   getLocales,
   getLanguageNames,

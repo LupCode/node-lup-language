@@ -28,6 +28,16 @@ describe('Checking loaded translations', () => {
     expect(languageNames['en']).toEqual('English');
   });
 
+  test('Load single translation that exists', async () => {
+    const translation = await lupLang.getTranslation('de', 'en', 'HelloWorld', TRANSLATIONS_DIR);
+    expect(translation).toEqual('Hallo Welt');
+  });
+
+  test('Load single translation that does not exist', async () => {
+    const translation = await lupLang.getTranslation('de', 'en', 'GoodBye', TRANSLATIONS_DIR);
+    expect(translation).toEqual('GoodBye');
+  });
+
   test('Load all translations if no translation keys are specified', async () => {
     const TEXT = await lupLang.getTranslations('de', 'en', [], TRANSLATIONS_DIR);
     expect(TEXT).toBeInstanceOf(Object);
