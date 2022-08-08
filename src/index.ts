@@ -148,11 +148,13 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
 };
 
 const _getTranslations = (
-  lang: string,
-  defaultLang: string,
+  lang: string | null | undefined,
+  defaultLang: string | null | undefined,
   translationKeys: string[] | Set<string> | null | undefined,
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
 ): { [key: string]: string } => {
+  defaultLang = defaultLang || lang || DEFAULT_LANGUAGE;
+  lang = lang || defaultLang;
   const transKeys: Set<string> = !translationKeys
     ? new Set()
     : !(translationKeys instanceof Set)
@@ -175,8 +177,8 @@ const _getTranslations = (
  * @returns {<key>: "<translation>"}
  */
 export const getTranslations = async (
-  lang: string,
-  defaultLang: string,
+  lang: string | null | undefined,
+  defaultLang: string | null | undefined,
   translationKeys: string[] | Set<string> | null | undefined = [],
   translationsDir: string = DEFAULT_TRANSLATIONS_DIR,
 ): Promise<{ [key: string]: string }> => {
@@ -194,8 +196,8 @@ export const getTranslations = async (
  * @returns Promise that resolves with the translation or with the given key if no translation found
  */
 export const getTranslation = async (
-  lang: string,
-  defaultLang: string,
+  lang: string | null | undefined,
+  defaultLang: string | null | undefined,
   translationKey: string,
   translationDir: string = DEFAULT_TRANSLATIONS_DIR,
 ): Promise<string> => {
