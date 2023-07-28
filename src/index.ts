@@ -1,10 +1,4 @@
-
-
-
-// TODO REDO import { ROOT } from 'lup-root';
-import { ROOT } from '../../node-lup-root/lib/index'; // TODO REMOVE
-
-
+import { ROOT } from 'lup-root';
 import * as fs from 'fs';
 import * as path from 'path';
 
