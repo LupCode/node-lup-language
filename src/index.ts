@@ -1,4 +1,10 @@
-import { ROOT } from 'lup-root';
+
+
+
+// TODO REDO import { ROOT } from 'lup-root';
+import { ROOT } from '../../node-lup-root/lib/index'; // TODO REMOVE
+
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -91,7 +97,7 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
       fs.readdir(TRANSLATIONS_DIR, null, (err: any, files: string[]) => {
         if (err) console.error(err);
         if (files.length === 0) {
-          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ')');
+          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + ROOT + ')');
         }
         const dict: any = {};
         const langs = new Set<string>();
