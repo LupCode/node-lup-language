@@ -82,8 +82,8 @@ const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]:
  */
 export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<string[]> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
-  LANGUAGES[translationsDir] = [];
-  DICTONARY[translationsDir] = {};
+  LANGUAGES[translationsDir] ||= [];
+  DICTONARY[translationsDir] ||= {};
   return new Promise((resolve, reject) => {
     const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
 
@@ -97,16 +97,22 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
         const langs = new Set<string>();
         let globals: any = null;
         let remaining = files.length;
+
         for (let i = 0; i < files.length; i++) {
           const file = files[i].toString();
+
+          // if not a json file skip it
           if (!file.endsWith('.json')) {
             if (--remaining === 0) {
               LANGUAGES[translationsDir] = Array.from(langs);
               DICTONARY[translationsDir] = dict;
               resolve(LANGUAGES[translationsDir]);
+              return;
             }
             continue;
           }
+
+          // start reading json file
           const filePath = path.resolve(TRANSLATIONS_DIR, file).toString();
           fs.readFile(filePath, {}, (err2: any, data: any) => {
             if (err2) console.error(err2);
@@ -137,11 +143,12 @@ export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANS
     }
 
     fs.access(TRANSLATIONS_DIR, (err: any) => {
-      if (!err) scanFiles();
+      if(!err) 
+        scanFiles();
       else
         fs.mkdir(TRANSLATIONS_DIR, { recursive: true }, (err2: any) => {
           if (err2) console.error(err2);
-          else scanFiles();
+          scanFiles();
         });
     });
   });
