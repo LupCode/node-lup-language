@@ -82,8 +82,7 @@ const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]:
  */
 export const reloadTranslations = async (translationsDir: string = DEFAULT_TRANSLATIONS_DIR): Promise<string[]> => {
   if (!translationsDir) translationsDir = DEFAULT_TRANSLATIONS_DIR;
-  LANGUAGES[translationsDir] ||= [];
-  DICTONARY[translationsDir] ||= {};
+  // do not pre-initialize LANGUAGES and DICTONARY here so in multi-threaded environments all threads wait
   return new Promise((resolve, reject) => {
     const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
 
