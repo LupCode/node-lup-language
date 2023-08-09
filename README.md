@@ -69,9 +69,9 @@ nextApp.prepare().then(async () => {
     app.all('*', (req: Request | any, res: Response) => {
         
         // add language prefix back to url (got removed by LanguageRouter)
-        const idx1 = req.originalUrl.lastIndexOf("."), idx2 = req.originalUrl.lastIndexOf("/");
-        req.url = (idx1 > idx2 || req.originalUrl.startsWith("/"+req.lang) || req.originalUrl.startsWith("/_next")) ? 
-                    req.originalUrl : "/"+req.lang+req.originalUrl;
+        const idx1 = req.url.lastIndexOf("."), idx2 = req.url.lastIndexOf("/");
+        req.url = (idx1 > idx2 || req.url.startsWith("/"+req.lang) || req.url.startsWith("/_next")) ? 
+                    req.originalUrl : "/"+req.lang+req.url;
 
         return nextHandler(req, res);
     });
@@ -92,7 +92,7 @@ export default function Home({LANGUAGE_NAMES, TEXT}){
     let components = [];
     for(let lang in LANGUAGE_NAMES){
         let name = LANGUAGE_NAMES[lang];
-        components.push(<a href="/{lang}">{name}</a>);
+        components.push(<a href={'/'+lang+'/'}>{name}</a>);
     }
 
     return (
@@ -147,7 +147,7 @@ export default async function Home({ params }: StaticParamsContext) {
   const TEXT = await loadTranslations(locale, ['HelloWorld']);
 
   return <>
-    <b>Content</b>
+    <b>{TEXT['HelloWorld']}</b>
   </>
 }
 
