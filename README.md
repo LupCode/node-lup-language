@@ -95,17 +95,17 @@ import { LanguageRouter } from "lup-language";
 
 // Settings
 const lupLang = LanguageRouter({
-    defaultLang: 'en',
+    defaultLanguage: 'en',
 });
 
 export function middleware(request: NextRequest): NextResponse {
-    
+
     // Redirect to correct language
     const langInfo = lupLang.nextJsMiddlewareHandler(request);
     if(langInfo.redirect || langInfo.cookie){
         const langResponse = langInfo.redirect ? NextResponse.redirect(langInfo.redirect, { status: langInfo.redirectResponseCode }) : NextResponse.next();
         if(langInfo.cookie){
-            langResponse.cookies.set(langInfo.name, langInfo.cookie.value, langInfo.cookie.options);
+            langResponse.cookies.set(langInfo.cookie.name, langInfo.cookie.value, langInfo.cookie.options);
         }
         return langResponse;
     }

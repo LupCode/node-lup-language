@@ -108,7 +108,7 @@ export const DEFAULTS: {
 
 type NextRequest = Request & {
   get cookies(): {
-    get(name: string): { value: string };
+    get(name: string): { value: string } | undefined;
   },
 };
 
@@ -124,9 +124,11 @@ type LanguageNextResponse = {
   cookie?: {
     name: string,
     value: string,
-    expire: number,
-    domain?: string,
-    path?: string,
+    options: {
+      expire: number,
+      domain?: string,
+      path?: string,
+    },
   },
 
   /** Language code that was detected. */
@@ -717,9 +719,11 @@ export const LanguageRouter = (
       response.cookie = {
         name: cookieName,
         value: lang,
-        expire: cookieExpire,
-        domain: cookieDomain ? cookieDomain : undefined,
-        path: cookiePath ? cookiePath : undefined,
+        options: {
+          expire: cookieExpire,
+          domain: cookieDomain ? cookieDomain : undefined,
+          path: cookiePath ? cookiePath : undefined,
+        }
       };
     }
 
