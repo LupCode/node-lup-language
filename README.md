@@ -86,7 +86,7 @@ export default async function Home({ params }: StaticParamsContext) {
 }
 ```
 
-Optional if unsupported languages or root should be redirected:
+Optional if unsupported languages or root should be redirected:  
 `middleware.ts`
 ```typescript
 import { NextResponse } from "next/server";
