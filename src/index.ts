@@ -58,16 +58,20 @@ export const DEFAULTS: {
   /** Default domain the cookie will be set for (can be null to not set property). */
   COOKIE_DOMAIN: string | null,
 
-  /** Default cookie setting if cookie should be set containing detected language.
-   * (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid). */
+  /** 
+   * Default cookie setting if cookie should be set containing detected language.
+   * (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid).
+   */
   COOKIE_UPDATE: boolean,
 
 
   /** Name of the output attribute added to the request object that tells which language is requested. */
   REQUEST_ADD_LANGUAGE_ATTRIBUTE: string,
 
-  /** Name of the output attribute added to the request object that points to a key/value map with the translations in the requested language 
-   * (empty string to disable). */
+  /** 
+   * Name of the output attribute added to the request object that points to a key/value map with the translations in the requested language 
+   * (empty string to disable).
+   */
   REQUEST_ADD_TRANSLATIONS_ATTRIBUTE: string,
 
   /** Name of the attribute added to the request object containing the path of the URI without the language prefix and without the query string. */
@@ -449,29 +453,39 @@ type LanguageRouterOptions = {
   languages?: string[],
 
 
-  /** Path to next.config.js file from which languages will be loaded from path i18n.locales 
-   * (empty string to disable, if not defined 'DEFAULTS.USE_NEXT_CONFIG_LANGUAGES' will be used). */
+  /** 
+   * Path to next.config.js file from which languages will be loaded from path i18n.locales 
+   * (empty string to disable, if not defined 'DEFAULTS.USE_NEXT_CONFIG_LANGUAGES' will be used).
+   */
   useNextConfigLanguages?: string,
 
-  /** If supported languages should be automatically loaded from found files in translations directory 
-   * (if not defined 'DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR' will be used). */
+  /** 
+   * If supported languages should be automatically loaded from found files in translations directory 
+   * (if not defined 'DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR' will be used). 
+   */
   languagesFromTranslationsDir?: boolean,
 
-  /** Relative path from project root or absolute path to a directory containing translation files.
+  /** 
+   * Relative path from project root or absolute path to a directory containing translation files.
    * Translation files are json files with the name of a language code e.g. 'en.json'
-   * (if not defined 'DEFAULTS.TRANSLATIONS_DIR' will be used, if null option is disabled). */
+   * (if not defined 'DEFAULTS.TRANSLATIONS_DIR' will be used, if null option is disabled). 
+   */
   translationsDir?: string,
 
-  /** Order of language detection methods. Entries can be removed if those methods should not be used.
-   * (if not defined 'DEFAULTS.LANGUAGE_DETECTION_METHODS' will be used). */
+  /** 
+   * Order of language detection methods. Entries can be removed if those methods should not be used.
+   * (if not defined 'DEFAULTS.LANGUAGE_DETECTION_METHODS' will be used). 
+   */
   languageDetectionMethods?: LanguageDetectionMethod[],
 
 
   /** If root document should be redirected to language prefixed root (if not defined 'DEFAULTS.REDIRECT_ROOT' will be used). */
   redirectRoot?: boolean,
 
-  /** HTTP response code that will be sent if root document gets redirected to language prefixed root 
-   * (if not defined 'DEFAULTS.REDIRECT_ROOT_RESPONSE_CODE' will be used). */
+  /** 
+   * HTTP response code that will be sent if root document gets redirected to language prefixed root 
+   * (if not defined 'DEFAULTS.REDIRECT_ROOT_RESPONSE_CODE' will be used).
+   */
   redirectRootResponseCode?: number,
 
 
@@ -487,21 +501,29 @@ type LanguageRouterOptions = {
   /** Domain the cookie will be set for (can be null to not set property, if not defined 'DEFAULTS.COOKIE_DOMAIN' will be used). */
   cookieDomain?: string,
 
-  /** If cookie should be set containing detected language (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid, 
-   * if not defined 'DEFAULTS.COOKIE_UPDATE' will be used). */
+  /** 
+   * If cookie should be set containing detected language (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid, 
+   * if not defined 'DEFAULTS.COOKIE_UPDATE' will be used).
+   */
   cookieUpdate?: boolean,
 
 
-  /** Name of the attribute added to the req object that will contain to the detected language string
-   * (if not defined 'DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE' will be used). */
+  /** 
+   * Name of the attribute added to the req object that will contain to the detected language string
+   * (if not defined 'DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE' will be used). 
+   */
   requestAddLanguageAttribute?: string,
 
-  /** Name of the attribute added to the req object that will point to a key/value map with all translations in the detected language 
-   * (empty string to disable, if not defined 'DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE' will be used). */
+  /** 
+   * Name of the attribute added to the req object that will point to a key/value map with all translations in the detected language 
+   * (empty string to disable, if not defined 'DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE' will be used). 
+   */
   requestAddTranslationsAttribute?: string,
 
-  /** Name of the attribute added to the req object containing the path of the URI without the language prefix and without the query string
-   * (if not defined 'DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE' will be used). */
+  /** 
+   * Name of the attribute added to the req object containing the path of the URI without the language prefix and without the query string
+   * (if not defined 'DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE' will be used). 
+   */
   requestAddPathAttribute?: string,
 
   /** If the locale prefix should be remove from the req.url attribute (if not defined 'DEFAULTS.REQUEST_URL_REMOVE_LANGUAGE_PREFIX' will be used). */
@@ -615,7 +637,7 @@ export const LanguageRouter = (
   }
 
 
-  function detectLanguage(uri: string, headers: any): { uri: string, lang: string, path: string } {
+  function detectLanguage(uri: string, headers: any): { uri: string, lang: string, pathUri: string } {
     let lang: string | null = null;
     const lowerUri = uri.toLowerCase();
     let updatedUri = false;
@@ -657,9 +679,9 @@ export const LanguageRouter = (
 
     lang = (lang || defaultLang).toLowerCase();
     uri = updatedUri ? uri : (lowerUri.startsWith('/' + lang) ? uri.substring(lang.length + 1) : (lowerUri.startsWith(lang) ? uri.substring(lang.length) : uri));
-    let queryIdx = uri.indexOf('?');
+    const queryIdx = uri.indexOf('?');
 
-    return { uri, lang, path: queryIdx>=0 ? uri.substring(0, queryIdx) : uri };
+    return { uri, lang, pathUri: queryIdx>=0 ? uri.substring(0, queryIdx) : uri };
   };
 
 
@@ -671,13 +693,13 @@ export const LanguageRouter = (
    */
   const nextJsMiddlewareHandler = (req: NextRequest): LanguageNextResponse => {
     if(!loadedLangs) preloadSync();
-    const { uri, lang, path } = detectLanguage(req.url, req.headers);
+    const { uri, lang, pathUri } = detectLanguage(req.url, req.headers);
     const isRoot = req.url.length <= 1;
 
     const response: LanguageNextResponse = {
       language: lang,
       languages: [...languagesSorted],
-      path: path,
+      path: pathUri,
     };
 
     // redirect root if not language prefixed
@@ -710,7 +732,7 @@ export const LanguageRouter = (
     }
 
     // add path attribute to request object
-    if(pathAttr) (req as any)[pathAttr] = path;
+    if(pathAttr) (req as any)[pathAttr] = pathUri;
 
     return response;
   };
@@ -718,7 +740,7 @@ export const LanguageRouter = (
 
   const expressHandler = async (req: any, res: any, next?: any) => {
     if(!loadedLangs) await preload();
-    const { uri, lang, path } = await detectLanguage(req.url, req.headers);
+    const { uri, lang, pathUri } = await detectLanguage(req.url, req.headers);
     const isRoot = req.url.length <= 1;
 
     // update cookie
@@ -749,7 +771,7 @@ export const LanguageRouter = (
     if(translationsAttr) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
     // add path attribute to request object
-    if(pathAttr) req[pathAttr] = path;
+    if(pathAttr) req[pathAttr] = pathUri;
 
     // remove language prefix from url
     if(updateUrlParam) req.url = uri;
