@@ -1,11 +1,7 @@
 import { ROOT } from 'lup-root';
 import {
-  DEFAULT_COOKIE_NAME,
-  DEFAULT_LANGUAGE,
-  DEFAULT_REQUEST_LANGUAGE_ATTR,
-  DEFAULT_REQUEST_PROCESSED_PATH_ATTR,
-  DEFAULT_REQUEST_TRANSLATIONS_ATTR,
-  getLocales,
+  DEFAULTS,
+  getLanguages,
   LanguageRouter,
 } from '../index';
 
@@ -14,24 +10,28 @@ const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
 var handle: Function | any;
 var locales: string[];
 beforeAll(async () => {
+
+  DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE = 'TEXT'; // by default disabled
+
   handle = LanguageRouter({
     translationsDir: TRANSLATIONS_DIR,
     redirectRoot: true,
   });
+
   await handle.preload();
-  locales = await getLocales(TRANSLATIONS_DIR);
+  locales = await getLanguages(TRANSLATIONS_DIR);
 });
 
 const emulateRequestResponse = function (
   url: string,
   langCookieValue: string | null,
   acceptLangHeader: string | null,
-): [req: any, res: any, exec: Function] {
+): [req: any, res: any, exec: () => Promise<void>] {
   const req: any = new Object();
   req.url = url;
   req.headers = {};
   if (acceptLangHeader) req.headers['accept-language'] = acceptLangHeader;
-  if (langCookieValue) req.headers['cookie'] = DEFAULT_COOKIE_NAME + '=' + langCookieValue;
+  if (langCookieValue) req.headers['cookie'] = DEFAULTS.COOKIE_NAME + '=' + langCookieValue;
 
   const res: any = new Object();
   res.get = (key: string) => res[key];
@@ -43,7 +43,7 @@ const emulateRequestResponse = function (
     req,
     res,
     async function () {
-      await handle(req, res);
+      return handle(req, res);
     },
   ];
 };
@@ -55,60 +55,60 @@ test('LanguageRouter valid handle', () => {
 
 test('Language code list present', async () => {
   const [req, _res, exec] = emulateRequestResponse('/hello', null, null);
-  expect(exec).not.toThrow();
-  let foundList = req[DEFAULT_REQUEST_LANGUAGE_ATTR + 's'];
+  await expect(exec).not.toThrow();
+  let foundList = req[DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE + 's'];
   expect(foundList).toBeInstanceOf(Array);
   expect(foundList.length === locales.length);
   expect(foundList).toEqual(expect.arrayContaining(locales));
 });
 
-test('Detect correct language from URI', () => {
+test('Detect correct language from URI', async () => {
   const [req, _res, exec] = emulateRequestResponse('/de/hello', 'en', null);
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_LANGUAGE_ATTR]).toBe('de');
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE]).toBe('de');
 });
 
-test('Detect correct language from cookie', () => {
+test('Detect correct language from cookie', async () => {
   const [req, _res, exec] = emulateRequestResponse('/hello', 'de', null);
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_LANGUAGE_ATTR]).toBe('de');
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE]).toBe('de');
 });
 
-test('Detect correct language from HTTP Accept-Language header field', () => {
+test('Detect correct language from HTTP Accept-Language header field', async () => {
   const [req, _res, exec] = emulateRequestResponse('/hello', null, 'de');
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_LANGUAGE_ATTR]).toBe('de');
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE]).toBe('de');
 });
 
-test('Fallback to default language if no language detected', () => {
+test('Fallback to default language if no language detected', async () => {
   const [req, _res, exec] = emulateRequestResponse('/hello', null, null);
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_LANGUAGE_ATTR]).toBe(DEFAULT_LANGUAGE);
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE]).toBe(DEFAULTS.LANGUAGE);
 });
 
-test('Translations attribute set', () => {
+test('Translations attribute set', async () => {
   const [req, _res, exec] = emulateRequestResponse('/de/hello', null, null);
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_TRANSLATIONS_ATTR]).toBeDefined();
-  expect(req[DEFAULT_REQUEST_TRANSLATIONS_ATTR]['HelloWorld']).toEqual('Hallo Welt');
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE]).toBeDefined();
+  expect(req[DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE]['HelloWorld']).toEqual('Hallo Welt');
 });
 
-test('Path attribute set', () => {
+test('Path attribute set', async () => {
   const [req, _res, exec] = emulateRequestResponse('/de/hello?test', null, null);
-  expect(exec).not.toThrow();
-  expect(req[DEFAULT_REQUEST_PROCESSED_PATH_ATTR]).toBeDefined();
-  expect(req[DEFAULT_REQUEST_PROCESSED_PATH_ATTR]).toEqual('/hello');
+  await expect(exec).not.toThrow();
+  expect(req[DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE]).toBeDefined();
+  expect(req[DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE]).toEqual('/hello');
 });
 
-test('Redirect root document to language prefixed root', () => {
+test('Redirect root document to language prefixed root', async () => {
   const [req, res, exec] = emulateRequestResponse('/', 'de', null);
-  expect(exec).not.toThrow();
+  await expect(exec).not.toThrow();
   expect(res.redirects.length === 1);
   expect(res.redirects[0].location === '/de/');
 });
 
-test('Do not redirect non-root documents', () => {
+test('Do not redirect non-root documents', async () => {
   const [req, res, exec] = emulateRequestResponse('/en/', 'de', null);
-  expect(exec).not.toThrow();
+  await expect(exec).not.toThrow();
   expect(res.redirects.length === 0);
 });

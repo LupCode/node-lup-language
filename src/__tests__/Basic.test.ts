@@ -13,7 +13,7 @@ describe('Checking loaded translations', () => {
   });
 
   test('Language codes correctly determined', async () => {
-    const foundLocales = await lupLang.getLocales(TRANSLATIONS_DIR);
+    const foundLocales = await lupLang.getLanguages(TRANSLATIONS_DIR);
     expect(foundLocales).toBeInstanceOf(Array);
     expect(foundLocales.length).toBe(2);
     expect(foundLocales).toContain('en');

@@ -11,7 +11,16 @@ Node express middleware for detecting requested language based on:
 4. Default language code
 Request will be modified such that URI does not start with language code and new attribute `lang` gets added to the request object.
 
-## Express Example
+## Request object after LanguageRouter
+* `req.lang` - requested language code e.g. 'en'
+* `req.langs` - list of all supported language codes (based on found translation files in `translations` dir or `next.config.js`).
+* `req.TEXT` - object with all translations for the requested language code (Disabled by default!).
+* `req.PATH` - update URI path without language code prefix.
+
+
+## Examples
+
+### Express
 `server.js`
 ```javascript
 const express = require('express');
@@ -24,7 +33,7 @@ const app = express();
 // Here parameter 'languages' is a list of language codes that 
 // your app will accept.
 app.use(LanguageRouter({
-    languages: ['en', 'de']
+    defaultLanguage: 'en',
 }));
 
 // Create your custom routes and retriev request language code 
@@ -40,7 +49,76 @@ app.listen(80, function(){
 ```
 
 
-## Next.js with Express Example
+### Next.js ≥13 Page
+`app/[locale]/translations.ts`
+```typescript
+'use server';
+import "server-only";
+import { getTranslations } from "lup-language";
+
+export default async function loadTranslations(locale: string, translationKeys: string[]): Promise<{[key: string]: string}> {
+    return await getTranslations(locale, 'en', translationKeys); // second argument is default locale
+};
+```
+
+`app/[locale]/layout.tsx`
+```typescript
+export async function generateStaticParams(context: StaticParamsContext){
+  const locales = await getLocales();
+  return locales.map((locale) => ({ locale: locale }));
+}
+```
+
+`app/[locale]/page.tsx`
+```typescript
+import React from "react";
+import styles from './page.module.css';
+import loadTranslations from "../translations";
+import { StaticParamsContext } from "../../../services/Types.service";
+
+export default async function Home({ params }: StaticParamsContext) {
+  const locale = params.locale;
+  const TEXT = await loadTranslations(locale, ['HelloWorld']);
+
+  return <>
+    <b>{TEXT['HelloWorld']}</b>
+  </>
+}
+```
+
+Optional if unsupported languages or root should be redirected:
+`middleware.ts`
+```typescript
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { LanguageRouter } from "lup-language";
+
+// Settings
+const lupLang = LanguageRouter({
+    defaultLang: 'en',
+});
+
+export function middleware(request: NextRequest): NextResponse {
+    
+    // Redirect to correct language
+    const langInfo = lupLang.nextJsMiddlewareHandler(request);
+    if(langInfo.redirect || langInfo.cookie){
+        const langResponse = langInfo.redirect ? NextResponse.redirect(langInfo.redirect, { status: langInfo.redirectResponseCode }) : NextResponse.next();
+        if(langInfo.cookie){
+            langResponse.cookies.set(langInfo.name, langInfo.cookie.value, langInfo.cookie.options);
+        }
+        return langResponse;
+    }
+
+
+    // Other middleware logic
+
+    return NextResponse.next();
+}
+```
+
+
+### Next.js with Express
 `server.ts`
 ```typescript
 import express from 'express';
@@ -83,7 +161,7 @@ nextApp.prepare().then(async () => {
 });
 ```
 
-## Next.js ≤12 Page Example
+### Next.js ≤12 Page
 `index.tsx`
 ```typescript
 // Next.js page
@@ -115,43 +193,5 @@ export async function getStaticProps(context){
             TEXT: TEXT
         }
     };
-}
-```
-
-## Next.js ≥13 Page Example
-`app/[locale]/translations.ts`
-```typescript
-'use server';
-import "server-only";
-import { getTranslations } from "lup-language";
-
-export default async function loadTranslations(locale: string, translationKeys: string[]): Promise<{[key: string]: string}> {
-    return await getTranslations(locale, 'en', translationKeys); // second argument is default locale
-};
-```
-
-`app/[locale]/layout.tsx`
-```typescript
-
-```
-
-`app/[locale]/page.tsx`
-```typescript
-import React from "react";
-import styles from './page.module.css';
-import loadTranslations from "../translations";
-import { StaticParamsContext } from "../../../services/Types.service";
-
-export default async function Home({ params }: StaticParamsContext) {
-  const locale = params.locale;
-  const TEXT = await loadTranslations(locale, ['HelloWorld']);
-
-  return <>
-    <b>{TEXT['HelloWorld']}</b>
-  </>
-}
-
-export async function generateStaticParams(context: StaticParamsContext) {
-  return [];
 }
 ```
