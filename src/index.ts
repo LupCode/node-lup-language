@@ -1,7 +1,6 @@
 import { ROOT } from 'lup-root';
 import * as fs from 'fs';
 import * as path from 'path';
-import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Language detection methods.
@@ -107,6 +106,11 @@ export const DEFAULTS: {
 
 
 
+type NextRequest = Request & {
+  get cookies(): {
+    get(name: string): { value: string };
+  },
+};
 
 type LanguageNextResponse = {
 
