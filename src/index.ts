@@ -746,7 +746,69 @@ export const LanguageRouter = (
   };
 
 
-  const expressHandler = async (req: any, res: any, next?: any) => {
+
+  /**
+   * Handles language detection and translation loading for a standard HTTP request.
+   * @param req Request object that should be handled.
+   * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
+   */
+  const handleHttpRequest = (req: Request): LanguageNextResponse => {
+    if(!loadedLangs) preloadSync();
+    const { uri, lang, pathUri } = detectLanguage(req.url, req.headers);
+    const isRoot = req.url.length <= 1;
+
+    const response: LanguageNextResponse = {
+      language: lang,
+      languages: [...languagesSorted],
+      path: pathUri,
+    };
+
+    // redirect root if not language prefixed
+    if (redirectRoot && isRoot) {
+      response.redirect = '/' + lang + '/';
+      response.redirectResponseCode = redirectRootResponseCode;
+    }
+
+    // update cookie
+    if (cookieName && cookieUpdate) {
+      response.cookie = {
+        name: cookieName,
+        value: lang,
+        options: {
+          expire: cookieExpire,
+          domain: cookieDomain ? cookieDomain : undefined,
+          path: cookiePath ? cookiePath : undefined,
+        }
+      };
+    }
+
+    // add language attribute to request object
+    if(languageAttr){
+      (req as any)[languageAttr] = lang;
+      (req as any)[languageAttr + 's'] = [...languagesSorted];
+    }
+    
+    // add translations attribute to request
+    if(translationsAttr){
+      response.translations = _getTranslations(lang, defaultLang, [], translationsDir);
+      (req as any)[translationsAttr] = response.translations;
+    }
+
+    // add path attribute to request object
+    if(pathAttr) (req as any)[pathAttr] = pathUri;
+
+    return response;
+  };
+
+
+
+  /**
+   * Can be passed to an express app to handle language detection and translation loading. 
+   * @param req Request object that should be handled.
+   * @param res Response object to which the response should be written.
+   * @param next Function that should be called if the request should be passed to the next middleware.
+   */
+  const handleExpress = async (req: any, res: any, next?: any) => {
     if(!loadedLangs) await preload();
     const { uri, lang, pathUri } = await detectLanguage(req.url, req.headers);
     const isRoot = req.url.length <= 1;
@@ -793,21 +855,21 @@ export const LanguageRouter = (
    * Optionally preload LanguageRouter so first request can be handled faster.
    * @returns Promise<void> that resolves when preloading is done.
    */
-  expressHandler.preload = preload;
+  handleExpress.preload = preload;
 
   /**
    * Optionally preload LanguageRouter so first request can be handled faster.
    */
-  expressHandler.preloadSync = preloadSync;
+  handleExpress.preloadSync = preloadSync;
 
   /**
    * Can be called inside a Next.js middleware to handle language detection and translation loading. 
    * @param req NextRequest object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
-  expressHandler.nextJsMiddlewareHandler = nextJsMiddlewareHandler;
+  handleExpress.nextJsMiddlewareHandler = nextJsMiddlewareHandler;
 
-  return expressHandler;
+  return handleExpress;
 };
 
 export default {
