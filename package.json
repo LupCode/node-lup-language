@@ -1,6 +1,6 @@
 {
   "name": "lup-language",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Node express middleware for detecting requested language",
   "files": [
     "lib/**/*"

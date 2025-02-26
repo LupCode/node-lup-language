@@ -107,6 +107,7 @@ export const DEFAULTS: {
 
 
 type NextRequest = Request & {
+  nextUrl: URL,
   get cookies(): {
     get(name: string): { value: string } | undefined;
   },
@@ -699,7 +700,7 @@ export const LanguageRouter = (
    */
   const nextJsMiddlewareHandler = (req: NextRequest): LanguageNextResponse => {
     if(!loadedLangs) preloadSync();
-    const { uri, lang, pathUri } = detectLanguage(req.url, req.headers);
+    const { uri, lang, pathUri } = detectLanguage(req.nextUrl.pathname, req.headers);
     const isRoot = uri.length <= 1;
 
     const response: LanguageNextResponse = {
