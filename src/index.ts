@@ -700,7 +700,7 @@ export const LanguageRouter = (
   const nextJsMiddlewareHandler = (req: NextRequest): LanguageNextResponse => {
     if(!loadedLangs) preloadSync();
     const { uri, lang, pathUri } = detectLanguage(req.url, req.headers);
-    const isRoot = req.url.length <= 1;
+    const isRoot = uri.length <= 1;
 
     const response: LanguageNextResponse = {
       language: lang,
