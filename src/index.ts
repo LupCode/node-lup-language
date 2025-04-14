@@ -379,6 +379,29 @@ export const getLanguages = async (translationsDir: string = DEFAULTS.TRANSLATIO
   return [...LANGUAGES[translationsDir]];
 };
 
+
+/**
+ * Checks if a given language is supported and returns the supported language code.
+ * If the given language is not supported the default language will be returned.
+ * 
+ * @param lang Language code that should be checked.
+ * @param defaultLang Default language code if given 'lang' is not supported.
+ * @param translationsDir Relative path to directory containing JSON files with translations to lookup supported translations (optional).
+ * @return Promise that resolves to the supported language code or undefined if no language is supported and also no default language is given.
+ */
+export const checkLanguage = async (lang: string | null | undefined, defaultLang?: string, translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string | undefined> => {
+  if(!lang) return defaultLang;
+  lang = lang.trim().toLowerCase();
+  const langs = await getLanguages(translationsDir);
+  for(let i=0; i < langs.length; i++){
+    if(langs[i].toLowerCase() === lang){
+      return langs[i];
+    }
+  }
+  return defaultLang;
+}
+
+
 /**
  * Returns a map of all found languages and their native name.
  * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'.

@@ -63,6 +63,28 @@ export default async function loadTranslations(locale: string, translationKeys: 
 
 `app/[locale]/layout.tsx`
 ```typescript
+
+export default async function RootLayout({ params, children }: LocaleLayoutProps){
+    const { locale } = await params;
+
+    // if locale is not supported redirect to a supported one
+    const validLocale = await checkLanguage(locale, getDefaultLocale());
+    if(validLocale && locale !== validLocale){
+        redirect('/'+validLocale+'/');
+    }
+
+    // load translations for given translation keys (note this loadTranslations function is defined in translations.ts, see below) 
+    const TEXT = await loadTranslations(locale, [
+        'HelloWorld',
+    ]);
+
+    return <html lang={locale}>
+        <body>
+            {TEXT['HelloWorld']}
+        </body>
+    </html>;
+}
+
 export async function generateStaticParams(context: StaticParamsContext){
   const locales = await getLocales();
   return locales.map((locale) => ({ locale: locale }));
@@ -84,6 +106,19 @@ export default async function Home({ params }: StaticParamsContext) {
     <b>{TEXT['HelloWorld']}</b>
   </>
 }
+```
+
+`app/[locale]/translations.ts`
+Server action that also allows client components to load translations.
+```typescript
+'use server';
+import 'server-only';
+
+import { getTranslations } from "lup-language";
+
+export default async function loadTranslations(locale: string, translationKeys: string[]): Promise<{[key: string]: string}> {
+    return await getTranslations(locale, getDefaultLocale(), translationKeys);
+};
 ```
 
 Optional if unsupported languages or root should be redirected:  
