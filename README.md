@@ -70,7 +70,7 @@ export default async function RootLayout({ params, children }: LocaleLayoutProps
     // if locale is not supported redirect to a supported one
     const validLocale = await checkLanguage(locale, getDefaultLocale());
     if(validLocale && locale !== validLocale){
-        redirect('/'+validLocale+'/');
+        permanentRedirect('/'+validLocale+'/'); // response code 308 - Permanent Redirect
     }
 
     // load translations for given translation keys (note this loadTranslations function is defined in translations.ts, see below) 
