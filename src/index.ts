@@ -733,7 +733,11 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
           : uri;
     const queryIdx = uri.indexOf('?');
 
-    return { uriWithQuery: uri, lang, uriWithoutQuery: queryIdx >= 0 ? uri.substring(0, queryIdx) : uri };
+    return {
+      uriWithQuery: uri || '/',
+      lang,
+      uriWithoutQuery: (queryIdx >= 0 ? uri.substring(0, queryIdx) : uri) || '/',
+    };
   }
 
   /**
