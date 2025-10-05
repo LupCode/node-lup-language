@@ -653,7 +653,34 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
     return null;
   }
 
-  function detectLanguage(uri: string, headers: any): { uriWithQuery: string; lang: string; uriWithoutQuery: string } {
+  function getUriWithQueryFromURL(url: string): string {
+    if (!url) return '/';
+    const idx = url.indexOf('://');
+    if (idx < 0) return url.startsWith('/') ? url : '/' + url;
+    const idx2 = url.indexOf('/', idx + 3);
+    return idx2 >= 0 ? url.substring(idx2) : '/';
+  }
+
+  /**
+   * Detects the language from the given URI and headers.
+   * @param uri URI that may contain a language prefix and query string.
+   * @param headers Headers object from the request.
+   * @returns Object containing the detected language and updated URI.
+   */
+  function detectLanguage(
+    uri: string,
+    headers: any,
+  ): {
+    /** URI without the language prefix but with a query string if present. */
+    uriWithQuery: string;
+
+    /** Detected language or default language as fallback. */
+    lang: string;
+
+    /** URI without the language prefix and without a query string. */
+    uriWithoutQuery: string;
+  } {
+    if (!uri) uri = '/';
     let lang: string | null = null;
     const lowerUri = uri.toLowerCase();
     let updatedUri = false;
@@ -720,7 +747,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
       req.nextUrl.pathname + req.nextUrl.search,
       req.headers,
     );
-    const isRoot = uriWithoutQuery.length <= 1;
+    const isRoot = req.nextUrl.pathname.length <= 1; // uriWithoutQuery is always without language prefix
 
     const response: LanguageNextResponse = {
       language: lang,
@@ -772,8 +799,9 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    */
   const handleHttpRequest = (req: Request): LanguageNextResponse => {
     if (!loadedLangs) preloadSync();
-    const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(req.url, req.headers);
-    const isRoot = uriWithoutQuery.length <= 1;
+    const uri = getUriWithQueryFromURL(req.url);
+    const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(uri, req.headers);
+    const isRoot = uri.length <= 1; // uriWithoutQuery is always without language prefix
 
     const response: LanguageNextResponse = {
       language: lang,
@@ -826,8 +854,9 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    */
   const handleExpress = async (req: any, res: any, next?: any) => {
     if (!loadedLangs) await preload();
-    const { uriWithQuery, lang, uriWithoutQuery } = await detectLanguage(req.url, req.headers);
-    const isRoot = uriWithoutQuery.length <= 1;
+    const uri = getUriWithQueryFromURL(req.url);
+    const { uriWithQuery, lang, uriWithoutQuery } = await detectLanguage(uri, req.headers);
+    const isRoot = uri.length <= 1;
 
     // update cookie
     if (cookieName && cookieUpdate) {

@@ -18,12 +18,12 @@ beforeAll(async () => {
 });
 
 const emulateRequestResponse = function (
-  url: string,
+  uri: string,
   langCookieValue: string | null,
   acceptLangHeader: string | null,
 ): [req: any, res: any, exec: () => Promise<void>] {
   const req: any = new Object();
-  req.url = url;
+  req.url = 'http://localhost' + uri;
   req.headers = {};
   if (acceptLangHeader) req.headers['accept-language'] = acceptLangHeader;
   if (langCookieValue) req.headers['cookie'] = DEFAULTS.COOKIE_NAME + '=' + langCookieValue;

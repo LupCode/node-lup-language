@@ -141,14 +141,14 @@ export function middleware(req: NextRequest): NextResponse {
     const langInfo = lupLang.nextJsMiddlewareHandler(req);
     if(langInfo.redirect || langInfo.cookie){
         req.nextUrl.pathname = langInfo.redirect ? langInfo.redirect : req.nextUrl.pathname;
-        const res = langInfo.redirect ? NextResponse.redirect(langInfo.redirect, { status: langInfo.redirectResponseCode }) : NextResponse.next();
+        const res = langInfo.redirect ? NextResponse.redirect(req.nextUrl, { status: langInfo.redirectResponseCode }) : NextResponse.next();
         if(langInfo.cookie){
             res.cookies.set(langInfo.cookie.name, langInfo.cookie.value, langInfo.cookie.options);
         }
         return res;
     }
 
-    
+
     // Other middleware logic
 
     return NextResponse.next();
