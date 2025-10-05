@@ -10,75 +10,67 @@ import * as path from 'path';
  */
 type LanguageDetectionMethod = 'uri' | 'http-accept' | 'cookie';
 
-
 /** Contains default settings that will be used if an option is not specified. */
 export const DEFAULTS: {
-
   /** Default language code that will be used if no other method can detect the language. */
-  LANGUAGE: string,
+  LANGUAGE: string;
 
   /** Default list of language codes that will be accepted. */
-  LANGUAGES: string[],
-
-
+  LANGUAGES: string[];
 
   /** Path to next.config.js file from which languages will be loaded from path i18n.locales (empty string to disable). */
-  USE_NEXT_CONFIG_LANGUAGES: string,
-  
+  USE_NEXT_CONFIG_LANGUAGES: string;
+
   /** Default if language codes should be loaded from files in translations directory. */
-  LANGUAGES_FROM_TRANSLATIONS_DIR: boolean,
+  LANGUAGES_FROM_TRANSLATIONS_DIR: boolean;
 
   /** Default relative path from project root to a directory containing translation files.
    * Translation files are json files with the name of a language code e.g. 'en.json'.
    * Can also be an absolute path.
    */
-  TRANSLATIONS_DIR: string,
+  TRANSLATIONS_DIR: string;
 
   /** Default order of language detection methods. Entries can be removed if those methods should not be used. */
-  LANGUAGE_DETECTION_METHODS: LanguageDetectionMethod[],
-
+  LANGUAGE_DETECTION_METHODS: LanguageDetectionMethod[];
 
   /** Default setting if request to root document should be redirected to language prefixed root. */
-  REDIRECT_ROOT: boolean,
+  REDIRECT_ROOT: boolean;
 
   /** If root gets redirected to language prefixed root this HTTP response code will be sent. */
-  REDIRECT_ROOT_RESPONSE_CODE: number,
-
+  REDIRECT_ROOT_RESPONSE_CODE: number;
 
   /** Default name of cookie to read/store user's language or null to disable cookie reading/storing. */
-  COOKIE_NAME: string,
+  COOKIE_NAME: string;
 
   /** Default expire seconds for cookie that gets set. */
-  COOKIE_EXPIRE: number,
+  COOKIE_EXPIRE: number;
 
   /** Default path for which cookie will be set (can be null to not set property). */
-  COOKIE_PATH: string,
+  COOKIE_PATH: string;
 
   /** Default domain the cookie will be set for (can be null to not set property). */
-  COOKIE_DOMAIN: string | null,
+  COOKIE_DOMAIN: string | null;
 
-  /** 
+  /**
    * Default cookie setting if cookie should be set containing detected language.
    * (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid).
    */
-  COOKIE_UPDATE: boolean,
-
+  COOKIE_UPDATE: boolean;
 
   /** Name of the output attribute added to the request object that tells which language is requested. */
-  REQUEST_ADD_LANGUAGE_ATTRIBUTE: string,
+  REQUEST_ADD_LANGUAGE_ATTRIBUTE: string;
 
-  /** 
-   * Name of the output attribute added to the request object that points to a key/value map with the translations in the requested language 
+  /**
+   * Name of the output attribute added to the request object that points to a key/value map with the translations in the requested language
    * (empty string to disable).
    */
-  REQUEST_ADD_TRANSLATIONS_ATTRIBUTE: string,
+  REQUEST_ADD_TRANSLATIONS_ATTRIBUTE: string;
 
   /** Name of the attribute added to the request object containing the path of the URI without the language prefix and without the query string. */
-  REQUEST_ADD_PATH_ATTRIBUTE: string,
+  REQUEST_ADD_PATH_ATTRIBUTE: string;
 
   /** Default behavior if the locale prefix should be remove from the req.url attribute. */
-  REQUEST_URL_REMOVE_LANGUAGE_PREFIX: boolean,
-
+  REQUEST_URL_REMOVE_LANGUAGE_PREFIX: boolean;
 } = {
   LANGUAGE: 'en',
   LANGUAGES: ['en'],
@@ -103,47 +95,43 @@ export const DEFAULTS: {
   REQUEST_URL_REMOVE_LANGUAGE_PREFIX: true,
 };
 
-
-
-
 type NextRequest = Request & {
-  nextUrl: URL,
+  nextUrl: URL;
   get cookies(): {
     get(name: string): { value: string } | undefined;
-  },
+  };
 };
 
 type LanguageNextResponse = {
-
   /** URI to redirect to. */
-  redirect?: string,
+  redirect?: string;
 
   /** HTTP response code to use when redirecting. */
-  redirectResponseCode?: number,
+  redirectResponseCode?: number;
 
   /** Cookie to set. */
   cookie?: {
-    name: string,
-    value: string,
+    name: string;
+    value: string;
     options: {
-      expire: number,
-      domain?: string,
-      path?: string,
-    },
-  },
+      expire: number;
+      domain?: string;
+      path?: string;
+    };
+  };
 
   /** Language code that was detected. */
-  language: string,
+  language: string;
 
   /** List of language codes that are supported. */
-  languages: string[],
+  languages: string[];
 
   /** Path of the URI without the language prefix and without the query string. */
-  path: string,
+  path: string;
 
   /** Object containing all translations in the detected language (only if requestAddTranslationsAttribute is set). */
-  translations?: { [key: string]: string },
-}
+  translations?: { [key: string]: string };
+};
 
 type WithMethods = {
   /**
@@ -158,20 +146,18 @@ type WithMethods = {
   preloadSync: () => void;
 
   /**
-   * Can be called inside a Next.js middleware to handle language detection and translation loading. 
+   * Can be called inside a Next.js middleware to handle language detection and translation loading.
    * @param req NextRequest object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
   nextJsMiddlewareHandler: (req: NextRequest) => LanguageNextResponse;
-}
+};
 
 type LanguageDetectionRequestHandler = ((req: any, res: any, next?: () => void) => Promise<void>) & WithMethods;
-
 
 // GLOBAL VARIABLES FOR CACHING
 const LANGUAGES: { [translationsDir: string]: string[] } = {}; // { translationsDir: [] }
 const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]: string } } } = {}; // { translationsDir: {lang: {key: translation} } }
-
 
 /**
  * Reloads translations from files inside given directory.
@@ -240,8 +226,7 @@ export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRAN
     }
 
     fs.access(TRANSLATIONS_DIR, (err: any) => {
-      if(!err) 
-        scanFiles();
+      if (!err) scanFiles();
       else
         fs.mkdir(TRANSLATIONS_DIR, { recursive: true }, (err2: any) => {
           if (err2) console.error(err2);
@@ -250,7 +235,6 @@ export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRAN
     });
   });
 };
-
 
 /**
  * Reloads translations from files inside given directory.
@@ -303,9 +287,7 @@ export const reloadTranslationsSync = (translationsDir: string = DEFAULTS.TRANSL
   LANGUAGES[translationsDir].sort();
   DICTONARY[translationsDir] = dict;
   return LANGUAGES[translationsDir];
-}
-
-
+};
 
 const _getTranslations = (
   lang: string | null | undefined,
@@ -318,14 +300,17 @@ const _getTranslations = (
 
   const idx = lang?.lastIndexOf('-') || -1; // country code stripping
   const altLang = idx >= 0 ? lang?.substring(0, idx) : defaultLang;
-  
+
   const transKeys: Set<string> = !translationKeys
     ? new Set()
     : !(translationKeys instanceof Set)
-    ? new Set(translationKeys)
-    : translationKeys;
+      ? new Set(translationKeys)
+      : translationKeys;
   const dictornary = DICTONARY[translationsDir]
-    ? DICTONARY[translationsDir][lang] || DICTONARY[translationsDir][altLang] || DICTONARY[translationsDir][defaultLang] || {}
+    ? DICTONARY[translationsDir][lang] ||
+      DICTONARY[translationsDir][altLang] ||
+      DICTONARY[translationsDir][defaultLang] ||
+      {}
     : {};
   const dict = transKeys.size !== 0 ? {} : dictornary;
   if (transKeys.size !== 0) transKeys.forEach((k) => (dict[k] = dictornary[k] || k));
@@ -379,28 +364,30 @@ export const getLanguages = async (translationsDir: string = DEFAULTS.TRANSLATIO
   return [...LANGUAGES[translationsDir]];
 };
 
-
 /**
  * Checks if a given language is supported and returns the supported language code.
  * If the given language is not supported the default language will be returned.
- * 
+ *
  * @param lang Language code that should be checked.
  * @param defaultLang Default language code if given 'lang' is not supported.
  * @param translationsDir Relative path to directory containing JSON files with translations to lookup supported translations (optional).
  * @return Promise that resolves to the supported language code or undefined if no language is supported and also no default language is given.
  */
-export const checkLanguage = async (lang: string | null | undefined, defaultLang?: string, translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string | undefined> => {
-  if(!lang) return defaultLang;
+export const checkLanguage = async (
+  lang: string | null | undefined,
+  defaultLang?: string,
+  translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
+): Promise<string | undefined> => {
+  if (!lang) return defaultLang;
   lang = lang.trim().toLowerCase();
   const langs = await getLanguages(translationsDir);
-  for(let i=0; i < langs.length; i++){
-    if(langs[i].toLowerCase() === lang){
+  for (let i = 0; i < langs.length; i++) {
+    if (langs[i].toLowerCase() === lang) {
       return langs[i];
     }
   }
   return defaultLang;
-}
-
+};
 
 /**
  * Returns a map of all found languages and their native name.
@@ -460,13 +447,12 @@ export const getTranslationFileContentSync = (
   return fs.readFileSync(filePath).toString();
 };
 
-
 /**
  * Splits a given locale string into language and country code.
  * @param locale Locale string that should be split.
  * @returns Language iso code and optionally country iso code if provided.
  */
-export const splitLocale = (locale: string): { languageIso: string, countryIso?: string } => {
+export const splitLocale = (locale: string): { languageIso: string; countryIso?: string } => {
   const idx = locale.lastIndexOf('-');
   return {
     languageIso: idx >= 0 ? locale.substring(0, idx) : locale,
@@ -474,91 +460,85 @@ export const splitLocale = (locale: string): { languageIso: string, countryIso?:
   };
 };
 
-
 type LanguageRouterOptions = {
   /** Fallback language code that will be used if no other method can detect the language (if not defined 'DEFAULTS.LANGUAGE' will be used). */
-  defaultLanguage?: string,
+  defaultLanguage?: string;
 
   /** List of language codes that will be accepted (if not defined 'DEFAULTS.LANGUAGES' will be used). */
-  languages?: string[],
+  languages?: string[];
 
-
-  /** 
-   * Path to next.config.js file from which languages will be loaded from path i18n.locales 
+  /**
+   * Path to next.config.js file from which languages will be loaded from path i18n.locales
    * (empty string to disable, if not defined 'DEFAULTS.USE_NEXT_CONFIG_LANGUAGES' will be used).
    */
-  useNextConfigLanguages?: string,
+  useNextConfigLanguages?: string;
 
-  /** 
-   * If supported languages should be automatically loaded from found files in translations directory 
-   * (if not defined 'DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR' will be used). 
+  /**
+   * If supported languages should be automatically loaded from found files in translations directory
+   * (if not defined 'DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR' will be used).
    */
-  languagesFromTranslationsDir?: boolean,
+  languagesFromTranslationsDir?: boolean;
 
-  /** 
+  /**
    * Relative path from project root or absolute path to a directory containing translation files.
    * Translation files are json files with the name of a language code e.g. 'en.json'
-   * (if not defined 'DEFAULTS.TRANSLATIONS_DIR' will be used, if null option is disabled). 
+   * (if not defined 'DEFAULTS.TRANSLATIONS_DIR' will be used, if null option is disabled).
    */
-  translationsDir?: string,
+  translationsDir?: string;
 
-  /** 
+  /**
    * Order of language detection methods. Entries can be removed if those methods should not be used.
-   * (if not defined 'DEFAULTS.LANGUAGE_DETECTION_METHODS' will be used). 
+   * (if not defined 'DEFAULTS.LANGUAGE_DETECTION_METHODS' will be used).
    */
-  languageDetectionMethods?: LanguageDetectionMethod[],
-
+  languageDetectionMethods?: LanguageDetectionMethod[];
 
   /** If root document should be redirected to language prefixed root (if not defined 'DEFAULTS.REDIRECT_ROOT' will be used). */
-  redirectRoot?: boolean,
+  redirectRoot?: boolean;
 
-  /** 
-   * HTTP response code that will be sent if root document gets redirected to language prefixed root 
+  /**
+   * HTTP response code that will be sent if root document gets redirected to language prefixed root
    * (if not defined 'DEFAULTS.REDIRECT_ROOT_RESPONSE_CODE' will be used).
    */
-  redirectRootResponseCode?: number,
-
+  redirectRootResponseCode?: number;
 
   /** Name of cookie to read/store user's language or null to disable cookie reading/storing (if not defined 'DEFAULTS.COOKIE_NAME' will be used). */
-  cookieName?: string,
+  cookieName?: string;
 
   /** Expire seconds for cookie that gets set (if not defined 'DEFAULTS.COOKIE_EXPIRE' will be used). */
-  cookieExpire?: number,
+  cookieExpire?: number;
 
   /** Path for which cookie will be set (can be null to not set property, if not defined 'DEFAULTS.COOKIE_PATH' will be used). */
-  cookiePath?: string,
+  cookiePath?: string;
 
   /** Domain the cookie will be set for (can be null to not set property, if not defined 'DEFAULTS.COOKIE_DOMAIN' will be used). */
-  cookieDomain?: string,
+  cookieDomain?: string;
 
-  /** 
-   * If cookie should be set containing detected language (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid, 
+  /**
+   * If cookie should be set containing detected language (otherwise cookie just get read if 'DEFAULTS.COOKIE_NAME' is valid,
    * if not defined 'DEFAULTS.COOKIE_UPDATE' will be used).
    */
-  cookieUpdate?: boolean,
+  cookieUpdate?: boolean;
 
-
-  /** 
+  /**
    * Name of the attribute added to the req object that will contain to the detected language string
-   * (if not defined 'DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE' will be used). 
+   * (if not defined 'DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE' will be used).
    */
-  requestAddLanguageAttribute?: string,
+  requestAddLanguageAttribute?: string;
 
-  /** 
-   * Name of the attribute added to the req object that will point to a key/value map with all translations in the detected language 
-   * (empty string to disable, if not defined 'DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE' will be used). 
+  /**
+   * Name of the attribute added to the req object that will point to a key/value map with all translations in the detected language
+   * (empty string to disable, if not defined 'DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE' will be used).
    */
-  requestAddTranslationsAttribute?: string,
+  requestAddTranslationsAttribute?: string;
 
-  /** 
+  /**
    * Name of the attribute added to the req object containing the path of the URI without the language prefix and without the query string
-   * (if not defined 'DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE' will be used). 
+   * (if not defined 'DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE' will be used).
    */
-  requestAddPathAttribute?: string,
+  requestAddPathAttribute?: string;
 
   /** If the locale prefix should be remove from the req.url attribute (if not defined 'DEFAULTS.REQUEST_URL_REMOVE_LANGUAGE_PREFIX' will be used). */
-  requestUrlRemoveLanguagePrefix?: boolean,
-
+  requestUrlRemoveLanguagePrefix?: boolean;
 };
 
 /**
@@ -566,12 +546,13 @@ type LanguageRouterOptions = {
  * @param options Object containing options for behavior of the middleware.
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests.
  */
-export const LanguageRouter = (
-  options?: LanguageRouterOptions
-): LanguageDetectionRequestHandler => {
+export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetectionRequestHandler => {
   const defaultLang = options?.defaultLanguage || DEFAULTS.LANGUAGE;
 
-  const languagesFromTranslations = options?.languagesFromTranslationsDir !== undefined ? options.languagesFromTranslationsDir : DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR;
+  const languagesFromTranslations =
+    options?.languagesFromTranslationsDir !== undefined
+      ? options.languagesFromTranslationsDir
+      : DEFAULTS.LANGUAGES_FROM_TRANSLATIONS_DIR;
   const translationsDir = options?.translationsDir !== undefined ? options.translationsDir : DEFAULTS.TRANSLATIONS_DIR;
   const languageDetectionMethods = options?.languageDetectionMethods || DEFAULTS.LANGUAGE_DETECTION_METHODS;
 
@@ -585,24 +566,32 @@ export const LanguageRouter = (
   const cookieUpdate = options?.cookieUpdate !== undefined ? options.cookieUpdate : DEFAULTS.COOKIE_UPDATE;
 
   const languageAttr = options?.requestAddLanguageAttribute || DEFAULTS.REQUEST_ADD_LANGUAGE_ATTRIBUTE;
-  const translationsAttr = options?.requestAddTranslationsAttribute !== undefined ? options.requestAddTranslationsAttribute : DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE;
-  const pathAttr = options?.requestAddPathAttribute !== undefined ? options.requestAddPathAttribute : DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE;
-  const updateUrlParam = options?.requestUrlRemoveLanguagePrefix !== undefined ? options.requestUrlRemoveLanguagePrefix : DEFAULTS.REQUEST_URL_REMOVE_LANGUAGE_PREFIX;
+  const translationsAttr =
+    options?.requestAddTranslationsAttribute !== undefined
+      ? options.requestAddTranslationsAttribute
+      : DEFAULTS.REQUEST_ADD_TRANSLATIONS_ATTRIBUTE;
+  const pathAttr =
+    options?.requestAddPathAttribute !== undefined
+      ? options.requestAddPathAttribute
+      : DEFAULTS.REQUEST_ADD_PATH_ATTRIBUTE;
+  const updateUrlParam =
+    options?.requestUrlRemoveLanguagePrefix !== undefined
+      ? options.requestUrlRemoveLanguagePrefix
+      : DEFAULTS.REQUEST_URL_REMOVE_LANGUAGE_PREFIX;
 
   // useNextConfigLanguages
   let languagesArr: string[] = []; // later converted to Set 'languages'
   if (options?.useNextConfigLanguages)
     languagesArr = languagesArr.concat(
-      require(options?.useNextConfigLanguages !== undefined ? options.useNextConfigLanguages : ROOT + '/next.config.js').i18n
-        .locales,
+      require(options?.useNextConfigLanguages !== undefined ? options.useNextConfigLanguages : ROOT + '/next.config.js')
+        .i18n.locales,
     );
   if (options?.languages) languagesArr = languagesArr.concat(options.languages);
   else if (!options?.useNextConfigLanguages) languagesArr = languagesArr.concat(DEFAULTS.LANGUAGES);
-  
+
   let loadedLangs = false;
   const languagesSorted: string[] = [];
   const languagesSet = new Set<string>(languagesArr);
-
 
   /**
    * Optionally preload LanguageRouter so first request can be handled faster
@@ -630,61 +619,61 @@ export const LanguageRouter = (
     languagesSorted.sort();
   };
 
-
   function getHeaderValue(headers: any, key: string): string | null {
-    if(!headers || !key) return null;
+    if (!headers || !key) return null;
     const lowerKey = key.toLowerCase();
-    if(typeof headers.get === 'function') return headers.get(key) ?? headers.get(lowerKey);
-    if(typeof headers === 'object') return headers[key] ?? headers[lowerKey];
-    const headersArr = Array.isArray(headers) ? headers : (typeof headers === 'string' ? headers.split('\n') : []);
+    if (typeof headers.get === 'function') return headers.get(key) ?? headers.get(lowerKey);
+    if (typeof headers === 'object') return headers[key] ?? headers[lowerKey];
+    const headersArr = Array.isArray(headers) ? headers : typeof headers === 'string' ? headers.split('\n') : [];
     headers = {};
-    for(let i=0; i < headersArr.length; i++){
+    for (let i = 0; i < headersArr.length; i++) {
       const idx = headersArr[i].indexOf(':');
-      if(idx > 0){
+      if (idx > 0) {
         headers[headersArr[i].substring(0, idx).trim()] = headersArr[i].substring(idx + 1).trim();
       } else {
-        headers[headersArr[i].trim()] = (i+1 < headersArr.length) ? headersArr[i+1].trim() : '';
+        headers[headersArr[i].trim()] = i + 1 < headersArr.length ? headersArr[i + 1].trim() : '';
         i++;
       }
     }
     return getHeaderValue(headers, key);
   }
 
-
   function getCookieValue(cookies: any): string | null {
-    if(!cookies) return null;
-    if(typeof cookies === 'object') return cookies[cookieName];
-    const cookiesArr = Array.isArray(cookies) ? cookies : (typeof cookies === 'string' ? cookies.split(';') : []);
-    for(let i=0; i < cookiesArr.length; i++){
+    if (!cookies) return null;
+    if (typeof cookies === 'object') return cookies[cookieName];
+    const cookiesArr = Array.isArray(cookies) ? cookies : typeof cookies === 'string' ? cookies.split(';') : [];
+    for (let i = 0; i < cookiesArr.length; i++) {
       const idx = cookiesArr[i].indexOf('=');
-      if(idx > 0){
-        if(cookiesArr[i].substring(0, idx).trim() === cookieName) return cookiesArr[i].substring(idx + 1).trim();
+      if (idx > 0) {
+        if (cookiesArr[i].substring(0, idx).trim() === cookieName) return cookiesArr[i].substring(idx + 1).trim();
       } else {
-        if(cookiesArr[i].trim() === cookieName && i+1 < cookiesArr.length) return cookiesArr[i+1].trim();
+        if (cookiesArr[i].trim() === cookieName && i + 1 < cookiesArr.length) return cookiesArr[i + 1].trim();
       }
     }
     return null;
   }
 
-
-  function detectLanguage(uri: string, headers: any): { uri: string, lang: string, pathUri: string } {
+  function detectLanguage(uri: string, headers: any): { uriWithQuery: string; lang: string; uriWithoutQuery: string } {
     let lang: string | null = null;
     const lowerUri = uri.toLowerCase();
     let updatedUri = false;
 
-    for(const detectionMethod of languageDetectionMethods){
-      switch(detectionMethod){
+    for (const detectionMethod of languageDetectionMethods) {
+      switch (detectionMethod) {
         case 'cookie':
-          if(!cookieName) continue;
+          if (!cookieName) continue;
           lang = getCookieValue(getHeaderValue(headers, 'Cookie'));
-          if(lang && !languagesSet.has(lang)) lang = null;
+          if (lang && !languagesSet.has(lang)) lang = null;
           break;
 
         case 'http-accept':
           const rawLangs = getHeaderValue(headers, 'Accept-Language');
-          if(!rawLangs) continue;
-          const langs = rawLangs.split(/,|;/g).map((v: string) => v.trim()).filter((v: string) => v.length > 0 && !v.startsWith('q='));
-          for (let i = 0; i < langs.length; i++){
+          if (!rawLangs) continue;
+          const langs = rawLangs
+            .split(/,|;/g)
+            .map((v: string) => v.trim())
+            .filter((v: string) => v.length > 0 && !v.startsWith('q='));
+          for (let i = 0; i < langs.length; i++) {
             if (languagesSet.has(langs[i])) {
               lang = langs[i];
               break;
@@ -695,41 +684,48 @@ export const LanguageRouter = (
         case 'uri':
           updatedUri = true;
           const startIdx = uri.startsWith('/') ? 1 : 0;
-          const endIdx = uri.indexOf('/', startIdx);
+          const endIdx = uri.indexOf('/', startIdx + 1);
           lang = (endIdx > startIdx ? uri.substring(startIdx, endIdx) : uri.substring(startIdx)).toLowerCase();
-          if(lang && !languagesSet.has(lang)){
+          if (lang && !languagesSet.has(lang)) {
             lang = null;
           } else {
             uri = endIdx > startIdx ? uri.substring(endIdx) : '';
           }
           break;
       }
-      if(lang) break;
+      if (lang) break;
     }
 
     lang = (lang || defaultLang).toLowerCase();
-    uri = updatedUri ? uri : (lowerUri.startsWith('/' + lang) ? uri.substring(lang.length + 1) : (lowerUri.startsWith(lang) ? uri.substring(lang.length) : uri));
+    uri = updatedUri
+      ? uri
+      : lowerUri.startsWith('/' + lang + '/')
+        ? uri.substring(lang.length + 1)
+        : lowerUri.startsWith(lang + '/')
+          ? uri.substring(lang.length)
+          : uri;
     const queryIdx = uri.indexOf('?');
 
-    return { uri, lang, pathUri: queryIdx>=0 ? uri.substring(0, queryIdx) : uri };
-  };
-
-
+    return { uriWithQuery: uri, lang, uriWithoutQuery: queryIdx >= 0 ? uri.substring(0, queryIdx) : uri };
+  }
 
   /**
-   * Can be called inside a Next.js middleware to handle language detection and translation loading. 
+   * Can be called inside a Next.js middleware to handle language detection and translation loading.
    * @param req NextRequest object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
   const nextJsMiddlewareHandler = (req: NextRequest): LanguageNextResponse => {
-    if(!loadedLangs) preloadSync();
-    const { uri, lang, pathUri } = detectLanguage(req.nextUrl.pathname, req.headers);
-    const isRoot = uri.length <= 1;
+    if (!loadedLangs) preloadSync();
+    const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(
+      req.nextUrl.pathname + req.nextUrl.search,
+      req.headers,
+    );
+    const isRoot = uriWithoutQuery.length <= 1;
 
     const response: LanguageNextResponse = {
       language: lang,
       languages: [...languagesSorted],
-      path: pathUri,
+      path: uriWithoutQuery,
     };
 
     // redirect root if not language prefixed
@@ -747,29 +743,27 @@ export const LanguageRouter = (
           expire: cookieExpire,
           domain: cookieDomain ? cookieDomain : undefined,
           path: cookiePath ? cookiePath : undefined,
-        }
+        },
       };
     }
 
     // add language attribute to request object
-    if(languageAttr){
+    if (languageAttr) {
       (req as any)[languageAttr] = lang;
       (req as any)[languageAttr + 's'] = [...languagesSorted];
     }
-    
+
     // add translations attribute to request
-    if(translationsAttr){
+    if (translationsAttr) {
       response.translations = _getTranslations(lang, defaultLang, [], translationsDir);
       (req as any)[translationsAttr] = response.translations;
     }
 
     // add path attribute to request object
-    if(pathAttr) (req as any)[pathAttr] = pathUri;
+    if (pathAttr) (req as any)[pathAttr] = uriWithoutQuery;
 
     return response;
   };
-
-
 
   /**
    * Handles language detection and translation loading for a standard HTTP request.
@@ -777,14 +771,14 @@ export const LanguageRouter = (
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
   const handleHttpRequest = (req: Request): LanguageNextResponse => {
-    if(!loadedLangs) preloadSync();
-    const { uri, lang, pathUri } = detectLanguage(req.url, req.headers);
-    const isRoot = req.url.length <= 1;
+    if (!loadedLangs) preloadSync();
+    const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(req.url, req.headers);
+    const isRoot = uriWithoutQuery.length <= 1;
 
     const response: LanguageNextResponse = {
       language: lang,
       languages: [...languagesSorted],
-      path: pathUri,
+      path: uriWithoutQuery,
     };
 
     // redirect root if not language prefixed
@@ -802,40 +796,38 @@ export const LanguageRouter = (
           expire: cookieExpire,
           domain: cookieDomain ? cookieDomain : undefined,
           path: cookiePath ? cookiePath : undefined,
-        }
+        },
       };
     }
 
     // add language attribute to request object
-    if(languageAttr){
+    if (languageAttr) {
       (req as any)[languageAttr] = lang;
       (req as any)[languageAttr + 's'] = [...languagesSorted];
     }
-    
+
     // add translations attribute to request
-    if(translationsAttr){
+    if (translationsAttr) {
       response.translations = _getTranslations(lang, defaultLang, [], translationsDir);
       (req as any)[translationsAttr] = response.translations;
     }
 
     // add path attribute to request object
-    if(pathAttr) (req as any)[pathAttr] = pathUri;
+    if (pathAttr) (req as any)[pathAttr] = uriWithoutQuery;
 
     return response;
   };
 
-
-
   /**
-   * Can be passed to an express app to handle language detection and translation loading. 
+   * Can be passed to an express app to handle language detection and translation loading.
    * @param req Request object that should be handled.
    * @param res Response object to which the response should be written.
    * @param next Function that should be called if the request should be passed to the next middleware.
    */
   const handleExpress = async (req: any, res: any, next?: any) => {
-    if(!loadedLangs) await preload();
-    const { uri, lang, pathUri } = await detectLanguage(req.url, req.headers);
-    const isRoot = req.url.length <= 1;
+    if (!loadedLangs) await preload();
+    const { uriWithQuery, lang, uriWithoutQuery } = await detectLanguage(req.url, req.headers);
+    const isRoot = uriWithoutQuery.length <= 1;
 
     // update cookie
     if (cookieName && cookieUpdate) {
@@ -851,29 +843,27 @@ export const LanguageRouter = (
 
     // redirect root if not language prefixed
     if (redirectRoot && isRoot) {
-      res.redirect(redirectRootResponseCode, DEFAULTS.REDIRECT_ROOT_RESPONSE_CODE, '/' + lang + '/', );
+      res.redirect(redirectRootResponseCode, DEFAULTS.REDIRECT_ROOT_RESPONSE_CODE, '/' + lang + '/');
       return;
     }
 
     // add language attribute to request object
-    if(languageAttr){
+    if (languageAttr) {
       req[languageAttr] = lang;
       req[languageAttr + 's'] = [...languagesSorted];
     }
-    
+
     // add translations attribute to request object
-    if(translationsAttr) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
+    if (translationsAttr) req[translationsAttr] = _getTranslations(lang, defaultLang, [], translationsDir);
 
     // add path attribute to request object
-    if(pathAttr) req[pathAttr] = pathUri;
+    if (pathAttr) req[pathAttr] = uriWithoutQuery;
 
     // remove language prefix from url
-    if(updateUrlParam) req.url = uri;
+    if (updateUrlParam) req.url = uriWithQuery;
 
     if (next) next();
   };
-
-
 
   /**
    * Optionally preload LanguageRouter so first request can be handled faster.
@@ -887,7 +877,14 @@ export const LanguageRouter = (
   handleExpress.preloadSync = preloadSync;
 
   /**
-   * Can be called inside a Next.js middleware to handle language detection and translation loading. 
+   * Handles language detection and translation loading for a standard HTTP request.
+   * @param req Request object that should be handled.
+   * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
+   */
+  handleExpress.httpHandler = handleHttpRequest;
+
+  /**
+   * Can be called inside a Next.js middleware to handle language detection and translation loading.
    * @param req NextRequest object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */

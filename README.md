@@ -1,6 +1,6 @@
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/LupCode/node-lup-language)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/lup-language)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/LupCode/node-lup-language/On%20Push)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/LupCode/node-lup-language/on-push.yml?branch=main)
 ![NPM](https://img.shields.io/npm/l/lup-language)
 
 # lup-language
@@ -128,24 +128,27 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { LanguageRouter } from "lup-language";
 
+export const runtime = 'nodejs'; // only works with NodeJS runtime
+
 // Settings
 const lupLang = LanguageRouter({
     defaultLanguage: 'en',
 });
 
-export function middleware(request: NextRequest): NextResponse {
+export function middleware(req: NextRequest): NextResponse {
 
     // Redirect to correct language
-    const langInfo = lupLang.nextJsMiddlewareHandler(request);
+    const langInfo = lupLang.nextJsMiddlewareHandler(req);
     if(langInfo.redirect || langInfo.cookie){
-        const langResponse = langInfo.redirect ? NextResponse.redirect(langInfo.redirect, { status: langInfo.redirectResponseCode }) : NextResponse.next();
+        req.nextUrl.pathname = langInfo.redirect ? langInfo.redirect : req.nextUrl.pathname;
+        const res = langInfo.redirect ? NextResponse.redirect(langInfo.redirect, { status: langInfo.redirectResponseCode }) : NextResponse.next();
         if(langInfo.cookie){
-            langResponse.cookies.set(langInfo.cookie.name, langInfo.cookie.value, langInfo.cookie.options);
+            res.cookies.set(langInfo.cookie.name, langInfo.cookie.value, langInfo.cookie.options);
         }
-        return langResponse;
+        return res;
     }
 
-
+    
     // Other middleware logic
 
     return NextResponse.next();
