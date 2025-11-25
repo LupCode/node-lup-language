@@ -1,7 +1,8 @@
+import path from 'path';
 import { ROOT } from 'lup-root';
 import * as lupLang from '../index';
 
-const TRANSLATIONS_DIR = ROOT + '/src/__tests__/translations';
+const TRANSLATIONS_DIR = path.join(ROOT, 'src', '__tests__', 'translations');
 
 test('Loading languages from translations directory', async () => {
   await expect(lupLang.reloadTranslations(TRANSLATIONS_DIR)).resolves.not.toThrow();
@@ -21,11 +22,23 @@ describe('Checking loaded translations', () => {
   });
 
   test('Language names correctly loaded', async () => {
-    const languageNames = await lupLang.getLanguageNames(TRANSLATIONS_DIR);
-    expect(languageNames).toBeInstanceOf(Object);
-    expect(Object.keys(languageNames).length).toBe(2);
-    expect(languageNames['de']).toEqual('Deutsch');
-    expect(languageNames['en']).toEqual('English');
+    const languageNativeNames = await lupLang.getLanguageNames(null, TRANSLATIONS_DIR);
+    expect(languageNativeNames).toBeInstanceOf(Object);
+    expect(Object.keys(languageNativeNames).length).toBe(2);
+    expect(languageNativeNames['de']).toEqual('Deutsch');
+    expect(languageNativeNames['en']).toEqual('English');
+
+    const languageNamesInDE = await lupLang.getLanguageNames('de', TRANSLATIONS_DIR);
+    expect(languageNamesInDE).toBeInstanceOf(Object);
+    expect(Object.keys(languageNamesInDE).length).toBe(2);
+    expect(languageNamesInDE['de']).toEqual('Deutsch');
+    expect(languageNamesInDE['en']).toEqual('Englisch');
+
+    const languageNamesInEN = await lupLang.getLanguageNames('en', TRANSLATIONS_DIR);
+    expect(languageNamesInEN).toBeInstanceOf(Object);
+    expect(Object.keys(languageNamesInEN).length).toBe(2);
+    expect(languageNamesInEN['de']).toEqual('German');
+    expect(languageNamesInEN['en']).toEqual('English');
   });
 
   test('Load single translation that exists', async () => {

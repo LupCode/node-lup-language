@@ -390,24 +390,42 @@ export const checkLanguage = async (
 };
 
 /**
- * Returns a map of all found languages and their native name.
- * Looksup following keys in the translations 'LANGUAGE_NAME_<lang>'.
+ * Returns a map of all found languages either in their native name or in a specified language.
+ * Looksup following keys in each translation file:
+ * - 'LANGUAGE_NAME_<LANG>': Name of the language <LANG> in the current language the file represents e.g. in `en.json` the key `LANGUAGE_NAME_DE` would contain `German`.
+ * - 'LANGUAGE_NAME': Native name of the language the file represents e.g. in `en.json` the key `LANGUAGE_NAME` would contain `English`.
+ * @param inLang Language code in which the language names should be returned (if null the native names will be returned).
  * @param translationsDir Relative path to directory containing JSON files with translations
  * @returns Promise that resolves to a map of language codes and their native names.
  */
 export const getLanguageNames = async (
+  inLang: string | null = null,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
 ): Promise<{ [key: string]: string }> => {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
+  const PREFIX = 'LANGUAGE_NAME';
   const dict = DICTONARY[translationsDir];
+  const langs = LANGUAGES[translationsDir];
   const names: { [key: string]: string } = {};
-  const keyLocale = 'LANGUAGE_NAME';
 
-  for (const lang of LANGUAGES[translationsDir]) {
-    const keyGlobal = 'LANGUAGE_NAME_' + lang.toUpperCase();
-    names[lang] = dict[lang][keyLocale] || dict[lang][keyGlobal] || lang.toUpperCase();
+  if (inLang) {
+    inLang = inLang.trim().toLowerCase();
+    for (const lang of langs) {
+      const LANG = lang.toUpperCase();
+      names[lang] =
+        dict[inLang][PREFIX + '_' + LANG] ||
+        (inLang === lang && dict[inLang][PREFIX]) || // name of language in given name
+        dict[lang][PREFIX + '_' + LANG] ||
+        dict[lang][PREFIX] || // native name of the language (backup)
+        LANG; // fallback
+    }
+  } else {
+    for (const lang of langs) {
+      const LANG = lang.toUpperCase();
+      names[lang] = dict[lang][PREFIX] || dict[lang][PREFIX + '_' + LANG] || LANG;
+    }
   }
   return names;
 };

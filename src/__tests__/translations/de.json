@@ -1,4 +1,7 @@
 {
+    "LANGUAGE_NAME": "Deutsch",
+    "LANGUAGE_NAME_EN": "Englisch",
+
     "HelloWorld": "Hallo Welt",
     "OverwriteMe": "Hab ich gemacht"
 }

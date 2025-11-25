@@ -1,6 +1,4 @@
 {
     "NAME": "lup-language",
-    "LANGUAGE_NAME_DE": "Deutsch",
-    "LANGUAGE_NAME_EN": "Should get overwritten",
     "OverwriteMe": "Overwrite me"
 }
