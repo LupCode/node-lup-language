@@ -1,4 +1,4 @@
-import { ROOT } from 'lup-root';
+import { APPLICATION_ROOT } from 'lup-root';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -168,13 +168,13 @@ export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRAN
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   // do not pre-initialize LANGUAGES and DICTONARY here so in multi-threaded environments all threads wait
   return new Promise((resolve, reject) => {
-    const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
+    const TRANSLATIONS_DIR = path.resolve(APPLICATION_ROOT, translationsDir).toString();
 
     function scanFiles() {
       fs.readdir(TRANSLATIONS_DIR, null, (err: any, files: string[]) => {
         if (err) console.error(err);
         if (files.length === 0) {
-          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + ROOT + ')');
+          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + APPLICATION_ROOT + ')');
         }
         const dict: any = {};
         const langs = new Set<string>();
@@ -244,14 +244,16 @@ export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRAN
 export const reloadTranslationsSync = (translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): string[] => {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   // do not pre-initialize LANGUAGES and DICTONARY here so in multi-threaded environments all threads wait
-  const TRANSLATIONS_DIR = path.resolve(ROOT, translationsDir).toString();
+  const TRANSLATIONS_DIR = path.resolve(APPLICATION_ROOT, translationsDir).toString();
 
   // create translations dir if not exists
   fs.mkdirSync(TRANSLATIONS_DIR, { recursive: true });
 
   const files = fs.readdirSync(TRANSLATIONS_DIR, null);
   if (files.length === 0) {
-    throw new Error("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + ROOT + ')');
+    throw new Error(
+      "No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + APPLICATION_ROOT + ')',
+    );
   }
   const dict: any = {};
   const langs = new Set<string>();
@@ -442,7 +444,7 @@ export const getTranslationFileContent = async (
 ): Promise<string> => {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   return new Promise((resolve, reject) => {
-    const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
+    const filePath = path.resolve(APPLICATION_ROOT, translationsDir, fileName).toString();
     fs.readFile(filePath, {}, (err: any, data: any) => {
       if (data) resolve(data.toString());
       else reject(err);
@@ -461,7 +463,7 @@ export const getTranslationFileContentSync = (
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
 ): string => {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
-  const filePath = path.resolve(ROOT, translationsDir, fileName).toString();
+  const filePath = path.resolve(APPLICATION_ROOT, translationsDir, fileName).toString();
   return fs.readFileSync(filePath).toString();
 };
 
@@ -601,8 +603,11 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
   let languagesArr: string[] = []; // later converted to Set 'languages'
   if (options?.useNextConfigLanguages)
     languagesArr = languagesArr.concat(
-      require(options?.useNextConfigLanguages !== undefined ? options.useNextConfigLanguages : ROOT + '/next.config.js')
-        .i18n.locales,
+      require(
+        options?.useNextConfigLanguages !== undefined
+          ? options.useNextConfigLanguages
+          : APPLICATION_ROOT + '/next.config.js',
+      ).i18n.locales,
     );
   if (options?.languages) languagesArr = languagesArr.concat(options.languages);
   else if (!options?.useNextConfigLanguages) languagesArr = languagesArr.concat(DEFAULTS.LANGUAGES);

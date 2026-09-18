@@ -1,8 +1,10 @@
+/// <reference types="jest" />
+/// <reference types="node" />
 import path from 'path';
-import { ROOT } from 'lup-root';
+import { APPLICATION_ROOT } from 'lup-root';
 import * as lupLang from '../index';
 
-const TRANSLATIONS_DIR = path.join(ROOT, 'src', '__tests__', 'translations');
+const TRANSLATIONS_DIR = path.join(APPLICATION_ROOT, 'src', '__tests__', 'translations');
 
 test('Loading languages from translations directory', async () => {
   await expect(lupLang.reloadTranslations(TRANSLATIONS_DIR)).resolves.not.toThrow();
