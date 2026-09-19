@@ -949,7 +949,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
   return handleExpress;
 };
 
-export default {
+const lupLanguage = {
   DEFAULTS,
   reloadTranslations,
   getTranslation,
@@ -960,3 +960,4 @@ export default {
   getTranslationFileContentSync,
   LanguageRouter,
 };
+export default lupLanguage;

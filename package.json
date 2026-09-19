@@ -1,6 +1,6 @@
 {
   "name": "lup-language",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "type": "module",
   "description": "Node express middleware for detecting requested language",
   "files": [
@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/LupCode/node-lup-language#readme",
   "dependencies": {
-    "lup-root": "1.4.0"
+    "lup-root": "^1.4.3"
   },
   "devDependencies": {
     "@types/jest": "30.0.0",
