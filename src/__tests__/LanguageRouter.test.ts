@@ -1,8 +1,8 @@
 import path from 'path';
-import { APPLICATION_ROOT } from 'lup-root';
+import { getApplicationRoot } from 'lup-root';
 import { DEFAULTS, getLanguages, LanguageRouter } from '../index';
 
-const TRANSLATIONS_DIR = path.join(APPLICATION_ROOT, 'src', '__tests__', 'translations');
+const TRANSLATIONS_DIR = path.join(getApplicationRoot(), 'src', '__tests__', 'translations');
 
 var handle: Function | any;
 var locales: string[];

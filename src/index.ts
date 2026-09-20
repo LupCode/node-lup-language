@@ -1,4 +1,4 @@
-import { APPLICATION_ROOT } from 'lup-root';
+import { getApplicationRoot } from 'lup-root';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -164,17 +164,17 @@ const DICTONARY: { [translationsDir: string]: { [lang: string]: { [key: string]:
  * @param translationsDir Relative path to directory containing JSON files with translations.
  * @returns Promise that resolves with a list of language codes that where found after translations have been reloaded from files.
  */
-export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string[]> => {
+export async function reloadTranslations(translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string[]> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   // do not pre-initialize LANGUAGES and DICTONARY here so in multi-threaded environments all threads wait
   return new Promise((resolve, reject) => {
-    const TRANSLATIONS_DIR = path.resolve(APPLICATION_ROOT, translationsDir).toString();
+    const TRANSLATIONS_DIR = path.resolve(getApplicationRoot(), translationsDir).toString();
 
     function scanFiles() {
       fs.readdir(TRANSLATIONS_DIR, null, (err: any, files: string[]) => {
         if (err) console.error(err);
         if (files.length === 0) {
-          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + APPLICATION_ROOT + ')');
+          reject("No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + getApplicationRoot() + ')');
         }
         const dict: any = {};
         const langs = new Set<string>();
@@ -241,10 +241,10 @@ export const reloadTranslations = async (translationsDir: string = DEFAULTS.TRAN
  * @param translationsDir Relative path to directory containing JSON files with translations.
  * @returns Promise that resolves with a list of language codes that where found after translations have been reloaded from files.
  */
-export const reloadTranslationsSync = (translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): string[] => {
+export function reloadTranslationsSync(translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): string[] {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   // do not pre-initialize LANGUAGES and DICTONARY here so in multi-threaded environments all threads wait
-  const TRANSLATIONS_DIR = path.resolve(APPLICATION_ROOT, translationsDir).toString();
+  const TRANSLATIONS_DIR = path.resolve(getApplicationRoot(), translationsDir).toString();
 
   // create translations dir if not exists
   fs.mkdirSync(TRANSLATIONS_DIR, { recursive: true });
@@ -252,7 +252,7 @@ export const reloadTranslationsSync = (translationsDir: string = DEFAULTS.TRANSL
   const files = fs.readdirSync(TRANSLATIONS_DIR, null);
   if (files.length === 0) {
     throw new Error(
-      "No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + APPLICATION_ROOT + ')',
+      "No files found in '" + translationsDir + "' (" + TRANSLATIONS_DIR + ' | ' + getApplicationRoot() + ')',
     );
   }
   const dict: any = {};
@@ -291,12 +291,12 @@ export const reloadTranslationsSync = (translationsDir: string = DEFAULTS.TRANSL
   return LANGUAGES[translationsDir];
 };
 
-const _getTranslations = (
+function _getTranslations(
   lang: string | null | undefined,
   defaultLang: string | null | undefined,
   translationKeys: string[] | Set<string> | null | undefined,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): { [key: string]: string } => {
+): { [key: string]: string } {
   defaultLang = defaultLang || lang || DEFAULTS.LANGUAGE;
   lang = lang || defaultLang;
 
@@ -327,12 +327,12 @@ const _getTranslations = (
  * @param translationsDir Relative path to directory containing JSON files with translations (optional).
  * @returns Promise that resolves with the translations in the given language.
  */
-export const getTranslations = async (
+export async function getTranslations(
   lang: string | null | undefined,
   defaultLang: string | null | undefined,
   translationKeys: string[] | Set<string> | null | undefined = [],
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): Promise<{ [key: string]: string }> => {
+): Promise<{ [key: string]: string }> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
   return _getTranslations(lang, defaultLang, translationKeys, translationsDir);
@@ -346,12 +346,12 @@ export const getTranslations = async (
  * @param translationDir Relative path to directory containing JSON files with translations (optional).
  * @returns Promise that resolves with the translation or with the given key if no translation found.
  */
-export const getTranslation = async (
+export async function getTranslation(
   lang: string | null | undefined,
   defaultLang: string | null | undefined,
   translationKey: string,
   translationDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): Promise<string> => {
+): Promise<string> {
   return (await getTranslations(lang, defaultLang, [translationKey], translationDir))[translationKey];
 };
 
@@ -360,7 +360,7 @@ export const getTranslation = async (
  * @param translationsDir Relative path to directory containing JSON files with translations.
  * @returns Promise that resolves to a list of language codes.
  */
-export const getLanguages = async (translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string[]> => {
+export async function getLanguages(translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string[]> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
   return [...LANGUAGES[translationsDir]];
@@ -375,11 +375,11 @@ export const getLanguages = async (translationsDir: string = DEFAULTS.TRANSLATIO
  * @param translationsDir Relative path to directory containing JSON files with translations to lookup supported translations (optional).
  * @return Promise that resolves to the supported language code or undefined if no language is supported and also no default language is given.
  */
-export const checkLanguage = async (
+export async function checkLanguage(
   lang: string | null | undefined,
   defaultLang?: string,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): Promise<string | undefined> => {
+): Promise<string | undefined> {
   if (!lang) return defaultLang;
   lang = lang.trim().toLowerCase();
   const langs = await getLanguages(translationsDir);
@@ -400,10 +400,10 @@ export const checkLanguage = async (
  * @param translationsDir Relative path to directory containing JSON files with translations
  * @returns Promise that resolves to a map of language codes and their native names.
  */
-export const getLanguageNames = async (
+export async function getLanguageNames(
   inLang: string | null = null,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): Promise<{ [key: string]: string }> => {
+): Promise<{ [key: string]: string }> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
@@ -438,13 +438,13 @@ export const getLanguageNames = async (
  * @param translationsDir Relative path to directory containing JSON files with translations.
  * @returns Promise that resolves to the contents of the file.
  */
-export const getTranslationFileContent = async (
+export async function getTranslationFileContent(
   fileName: string,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): Promise<string> => {
+): Promise<string> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   return new Promise((resolve, reject) => {
-    const filePath = path.resolve(APPLICATION_ROOT, translationsDir, fileName).toString();
+    const filePath = path.resolve(getApplicationRoot(), translationsDir, fileName).toString();
     fs.readFile(filePath, {}, (err: any, data: any) => {
       if (data) resolve(data.toString());
       else reject(err);
@@ -458,12 +458,12 @@ export const getTranslationFileContent = async (
  * @param translationsDir Relative path to directory containing JSON files with translations.
  * @returns Contents of the file.
  */
-export const getTranslationFileContentSync = (
+export function getTranslationFileContentSync(
   fileName: string,
   translationsDir: string = DEFAULTS.TRANSLATIONS_DIR,
-): string => {
+): string {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
-  const filePath = path.resolve(APPLICATION_ROOT, translationsDir, fileName).toString();
+  const filePath = path.resolve(getApplicationRoot(), translationsDir, fileName).toString();
   return fs.readFileSync(filePath).toString();
 };
 
@@ -472,7 +472,7 @@ export const getTranslationFileContentSync = (
  * @param locale Locale string that should be split.
  * @returns Language iso code and optionally country iso code if provided.
  */
-export const splitLocale = (locale: string): { languageIso: string; countryIso?: string } => {
+export function splitLocale(locale: string): { languageIso: string; countryIso?: string } {
   const idx = locale.lastIndexOf('-');
   return {
     languageIso: idx >= 0 ? locale.substring(0, idx) : locale,
@@ -566,7 +566,7 @@ type LanguageRouterOptions = {
  * @param options Object containing options for behavior of the middleware.
  * @returns function(req, res, next) that is designed for being set as middleware to pre-handle incoming requests.
  */
-export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetectionRequestHandler => {
+export function LanguageRouter(options?: LanguageRouterOptions): LanguageDetectionRequestHandler {
   const defaultLang = options?.defaultLanguage || DEFAULTS.LANGUAGE;
 
   const languagesFromTranslations =
@@ -606,7 +606,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
       require(
         options?.useNextConfigLanguages !== undefined
           ? options.useNextConfigLanguages
-          : APPLICATION_ROOT + '/next.config.js',
+          : getApplicationRoot() + '/next.config.js',
       ).i18n.locales,
     );
   if (options?.languages) languagesArr = languagesArr.concat(options.languages);
@@ -620,7 +620,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    * Optionally preload LanguageRouter so first request can be handled faster
    * @returns Promise<void> that resolves when preloading is done.
    */
-  const preload = async (): Promise<void> => {
+  async function preload(): Promise<void> {
     if (loadedLangs) return;
     loadedLangs = true;
     if (translationsDir) {
@@ -631,7 +631,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
     languagesSorted.sort();
   };
 
-  const preloadSync = (): void => {
+  function preloadSync(): void {
     if (loadedLangs) return;
     loadedLangs = true;
     if (translationsDir) {
@@ -768,7 +768,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    * @param req NextRequest object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
-  const nextJsMiddlewareHandler = (req: NextRequest): LanguageNextResponse => {
+  function nextJsMiddlewareHandler(req: NextRequest): LanguageNextResponse {
     if (!loadedLangs) preloadSync();
     const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(
       req.nextUrl.pathname + req.nextUrl.search,
@@ -824,7 +824,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    * @param req Request object that should be handled.
    * @returns Object containing redirect and redirectResponseCode if a redirect should be done.
    */
-  const handleHttpRequest = (req: Request): LanguageNextResponse => {
+  function handleHttpRequest(req: Request): LanguageNextResponse {
     if (!loadedLangs) preloadSync();
     const uri = getUriWithQueryFromURL(req.url);
     const { uriWithQuery, lang, uriWithoutQuery } = detectLanguage(uri, req.headers);
@@ -879,7 +879,7 @@ export const LanguageRouter = (options?: LanguageRouterOptions): LanguageDetecti
    * @param res Response object to which the response should be written.
    * @param next Function that should be called if the request should be passed to the next middleware.
    */
-  const handleExpress = async (req: any, res: any, next?: any) => {
+  async function handleExpress(req: any, res: any, next?: any): Promise<void> {
     if (!loadedLangs) await preload();
     const uri = getUriWithQueryFromURL(req.url);
     const { uriWithQuery, lang, uriWithoutQuery } = await detectLanguage(uri, req.headers);
