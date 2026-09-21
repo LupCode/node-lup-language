@@ -115,8 +115,8 @@ type LanguageNextResponse = {
     value: string;
     options: {
       expire: number;
-      domain?: string;
-      path?: string;
+      domain?: string | undefined;
+      path?: string | undefined;
     };
   };
 
@@ -182,14 +182,14 @@ export async function reloadTranslations(translationsDir: string = DEFAULTS.TRAN
         let remaining = files.length;
 
         for (let i = 0; i < files.length; i++) {
-          const file = files[i].toString();
+          const file = files[i]!.toString();
 
           // if not a json file skip it
           if (!file.endsWith('.json')) {
             if (--remaining === 0) {
               LANGUAGES[translationsDir] = Array.from(langs);
               DICTONARY[translationsDir] = dict;
-              resolve(LANGUAGES[translationsDir]);
+              resolve(LANGUAGES[translationsDir]!);
               return;
             }
             continue;
@@ -216,9 +216,9 @@ export async function reloadTranslations(translationsDir: string = DEFAULTS.TRAN
             }
             if (--remaining === 0) {
               LANGUAGES[translationsDir] = Array.from(langs);
-              LANGUAGES[translationsDir].sort();
+              LANGUAGES[translationsDir]!.sort();
               DICTONARY[translationsDir] = dict;
-              resolve(LANGUAGES[translationsDir]);
+              resolve(LANGUAGES[translationsDir]!);
             }
           });
         }
@@ -260,7 +260,7 @@ export function reloadTranslationsSync(translationsDir: string = DEFAULTS.TRANSL
   let globals: any = null;
 
   for (let i = 0; i < files.length; i++) {
-    const file = files[i].toString();
+    const file = files[i]!.toString();
 
     // if not a json file skip it
     if (!file.endsWith('.json')) continue;
@@ -286,9 +286,9 @@ export function reloadTranslationsSync(translationsDir: string = DEFAULTS.TRANSL
   }
 
   LANGUAGES[translationsDir] = Array.from(langs);
-  LANGUAGES[translationsDir].sort();
+  LANGUAGES[translationsDir]!.sort();
   DICTONARY[translationsDir] = dict;
-  return LANGUAGES[translationsDir];
+  return LANGUAGES[translationsDir]!;
 };
 
 function _getTranslations(
@@ -352,7 +352,7 @@ export async function getTranslation(
   translationKey: string,
   translationDir: string = DEFAULTS.TRANSLATIONS_DIR,
 ): Promise<string> {
-  return (await getTranslations(lang, defaultLang, [translationKey], translationDir))[translationKey];
+  return (await getTranslations(lang, defaultLang, [translationKey], translationDir))[translationKey]!;
 };
 
 /**
@@ -363,7 +363,7 @@ export async function getTranslation(
 export async function getLanguages(translationsDir: string = DEFAULTS.TRANSLATIONS_DIR): Promise<string[]> {
   if (!translationsDir) translationsDir = DEFAULTS.TRANSLATIONS_DIR;
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
-  return [...LANGUAGES[translationsDir]];
+  return [...LANGUAGES[translationsDir]!];
 };
 
 /**
@@ -384,7 +384,7 @@ export async function checkLanguage(
   lang = lang.trim().toLowerCase();
   const langs = await getLanguages(translationsDir);
   for (let i = 0; i < langs.length; i++) {
-    if (langs[i].toLowerCase() === lang) {
+    if (langs[i]!.toLowerCase() === lang) {
       return langs[i];
     }
   }
@@ -408,8 +408,8 @@ export async function getLanguageNames(
   if (!DICTONARY[translationsDir]) await reloadTranslations(translationsDir);
 
   const PREFIX = 'LANGUAGE_NAME';
-  const dict = DICTONARY[translationsDir];
-  const langs = LANGUAGES[translationsDir];
+  const dict = DICTONARY[translationsDir]!;
+  const langs = LANGUAGES[translationsDir]!;
   const names: { [key: string]: string } = {};
 
   if (inLang) {
@@ -417,16 +417,16 @@ export async function getLanguageNames(
     for (const lang of langs) {
       const LANG = lang.toUpperCase();
       names[lang] =
-        dict[inLang][PREFIX + '_' + LANG] ||
-        (inLang === lang && dict[inLang][PREFIX]) || // name of language in given name
-        dict[lang][PREFIX + '_' + LANG] ||
-        dict[lang][PREFIX] || // native name of the language (backup)
+        dict[inLang]![PREFIX + '_' + LANG] ||
+        (inLang === lang && dict[inLang]![PREFIX]) || // name of language in given name
+        dict[lang]![PREFIX + '_' + LANG] ||
+        dict[lang]![PREFIX] || // native name of the language (backup)
         LANG; // fallback
     }
   } else {
     for (const lang of langs) {
       const LANG = lang.toUpperCase();
-      names[lang] = dict[lang][PREFIX] || dict[lang][PREFIX + '_' + LANG] || LANG;
+      names[lang] = dict[lang]![PREFIX] || dict[lang]![PREFIX + '_' + LANG] || LANG;
     }
   }
   return names;
@@ -472,7 +472,7 @@ export function getTranslationFileContentSync(
  * @param locale Locale string that should be split.
  * @returns Language iso code and optionally country iso code if provided.
  */
-export function splitLocale(locale: string): { languageIso: string; countryIso?: string } {
+export function splitLocale(locale: string): { languageIso: string; countryIso?: string | undefined } {
   const idx = locale.lastIndexOf('-');
   return {
     languageIso: idx >= 0 ? locale.substring(0, idx) : locale,
@@ -724,8 +724,8 @@ export function LanguageRouter(options?: LanguageRouterOptions): LanguageDetecti
             .map((v: string) => v.trim())
             .filter((v: string) => v.length > 0 && !v.startsWith('q='));
           for (let i = 0; i < langs.length; i++) {
-            if (languagesSet.has(langs[i])) {
-              lang = langs[i];
+            if (languagesSet.has(langs[i]!)) {
+              lang = langs[i]!;
               break;
             }
           }

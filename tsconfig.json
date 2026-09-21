@@ -2,14 +2,27 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./lib",
+
     "target": "es2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
-    "isolatedModules": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["es2022"],
+
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
     "strict": true,
+    "verbatimModuleSyntax": true,
+
     "types": ["node"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/**"]
+  "exclude": ["node_modules", "lib", "**/__tests__/**"]
 }
